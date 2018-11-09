@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.VehicleAuthorizationDao">
+    <!-- 分页获取授权列表   （app用）-->
+    <select id="selectByUserIdAndAuthorizationstatus" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.AuthorizationListVo">
+        select vehicleauthorization.id as authorizationId , vehicletask.plate as plate,
+        case when vehicleauthorization.authorization_status = '03' and vehicleauthorization.is_delay = '1' then '09'
+        else vehicleauthorization.authorization_status end as authorizationStatus,
+        vehicleauthorization.apply_start_date as applyDate ,vehicleauthorization.remark as applyRemark ,vehicleauthorization.apply_end_date as approvalDate ,
+        vehicleauthorization.approval_remark as approvalRemark ,vehicleauthorization.authorization_out_time_date as authOutTimeDate,vehicleauthorization.is_delay as isDelay,
+        vehicleauthorization.delay_date as delayDate,vehicleauthorization.delay_remark as delayRemark,vehicleauthorization.operate_date as finishDate,vehicleauthorization.operate_date as cancelDate,
+        vehicleauthorization.operate_date as operateDate,
+        (UNIX_TIMESTAMP(vehicleauthorization.operate_date) - UNIX_TIMESTAMP(vehicleauthorization.apply_start_date)) as elapseTime,systemuser.user_phone as leasePhone
+        from vehicle_authorization vehicleauthorization
+        inner join  vehicle_task vehicletask on vehicleauthorization.task_id = vehicletask.id
+        inner join system_user systemuser on systemuser.user_id = vehicletask.lease_company_user_name
+        where vehicleauthorization.user_id = #{userId}
+        and vehicleauthorization.authorization_status = #{authorizationStatus}
+        order by vehicleauthorization.operate_date desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+    <!-- 获取资料预览图片url-->
+    <select id="selectByAuthorizationId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.ViewMaterialVo">
+        select vehicleauthorization.applicant_name as applicantName,vehicleauthorization.applicant_phone as applicantPhone ,vehicleauthorization.applicant_identity_num as applicantIdentityNum ,
+                vehicleauthorization.remark as remark ,vehiclephotopath.photo_url
+        from  vehicle_authorization vehicleauthorization
+        left join  vehicle_photo_path vehiclephotopath on vehicleauthorization.photo_uuid = vehiclephotopath.photo_uuid
+        where vehicleauthorization.id = #{authorizationId}
+    </select>
+    <!-- 根据用户id和任务id，获取用户最新申请信息-->
+    <select id="selectByUserIdAndTaskId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.ViewMaterialVo">
+        select vehicleauthorization.applicant_name as applicantName,vehicleauthorization.applicant_phone as applicantPhone ,vehicleauthorization.applicant_identity_num as applicantIdentityNum ,
+        case when vehicleauthorization.authorization_status = '02' or vehicleauthorization.authorization_status = '06' or vehicleauthorization.authorization_status = '07' then '0'
+        else '1' end as applyStatus
+        from vehicle_authorization vehicleauthorization
+        where vehicleauthorization.task_id = #{taskId}
+        and vehicleauthorization.user_id = #{userId}
+        and not exists( select * from vehicle_authorization a where a.user_id = vehicleauthorization.user_id and a.task_id = vehicleauthorization.task_id  and a.create_time > vehicleauthorization.create_time)
+    </select>
+
+    <!-- 根据授权状态，分页获取授权列表   （后台用）-->
+    <select id="selectByAuthorizationstatus" parameterType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.AuthorizationVo" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.AuthorizationListVo">
+        select vehicletask.name, vehicletask.plate, vehicletask.service_fee, vehicletask.vehicle_identify_num, vehicletask.engine_no, vehicletask.vehicle_type
+                ,vehicletask.vehicle_color,vehicletask.vehicle_province,vehicletask.vehicle_city,
+                vehicleauthorization.task_id , vehicleauthorization.user_id, vehicleauthorization.authorization_status, vehicleauthorization.applicant_name,
+                vehicleauthorization.applicant_phone, vehicleauthorization.applicant_identity_num, vehicleauthorization.remark, vehicleauthorization.apply_start_date,
+                vehicleauthorization.apply_end_date, vehicleauthorization.id,vehicleauthorization.approval_remark,vehicleauthorization.operate_date ,vehicleauthorization.photo_uuid,
+                vehicleauthorization.authorization_out_time_date, vehicleauthorization.authorization_paper_url,vehicleauthorization.address
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask on vehicletask.id = vehicleauthorization.task_id
+        where 1=1
+        <if test="authorizationVo.authorizationStatus!= null and authorizationVo.authorizationStatus !=''">
+          and vehicleauthorization.authorization_status = #{authorizationVo.authorizationStatus}
+        </if>
+        <if test="authorizationVo.applicantName!= null and authorizationVo.applicantName !=''">
+          and vehicleauthorization.applicant_name like #{authorizationVo.applicantName}
+        </if>
+        <if test="authorizationVo.vehiclePlate!= null and authorizationVo.vehiclePlate !=''">
+          and vehicletask.plate like #{authorizationVo.vehiclePlate}
+        </if>
+        <if test="authorizationVo.vehicleIdentifyNum!= null and authorizationVo.vehicleIdentifyNum !=''">
+          and vehicletask.vehicle_identify_num like #{authorizationVo.vehicleIdentifyNum}
+        </if>
+        <if test="authorizationVo.userId!= null and authorizationVo.userId !=''">
+          and vehicleauthorization.user_id like #{authorizationVo.userId}
+        </if>
+        <if test="authorizationVo.applicantPhone!= null and authorizationVo.applicantPhone !=''">
+          and vehicleauthorization.applicant_phone like #{authorizationVo.applicantPhone}
+        </if>
+        <if test="leaseId!= null and leaseId !=''">
+            and vehicletask.lease_company_user_name = (select t.user_id from system_user t where t.lease_id = #{leaseId} and t.user_role = '11')
+        </if>
+        order by vehicleauthorization.operate_date desc
+        <if test="flag == 0 and page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+
+    <!-- 委托公司id获取该委托公司下的待审批数量-->
+    <select id="selectCount1" parameterType="java.lang.String" resultType="java.lang.Long">
+        select count(*)
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask
+        on vehicleauthorization.task_id = vehicletask.id
+        where vehicletask.lease_company_user_name = (select t.user_id from system_user t where t.lease_id = #{leaseId} and t.user_role = '11')
+        and vehicleauthorization.authorization_status = '01'
+        <if test="userRole=='12'.toString() and provinces != null and provinces.size!=0">
+            and (
+            <foreach collection="provinces" item="item" index="index" >
+                <if test="index!=0">
+                    or vehicletask.fp_province =  #{item}
+                </if>
+                <if test="index==0">
+                    vehicletask.fp_province =  #{item}
+                </if>
+            </foreach>
+            )
+        </if>
+    </select>
+
+    <!-- 分页获取审批列表（app用）-->
+    <select id="selectApprovalList" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.ApprovalListVo">
+        select vehicletask.plate, vehicletask.vehicle_identify_num,vehicletask.id as taskId,
+        case when vehicleauthorization.authorization_status = '03' and vehicleauthorization.is_delay = '1' then '09'
+        else vehicleauthorization.authorization_status end as authorizationStatus,vehicleauthorization.is_delay,
+        vehicleauthorization.remark, vehicleauthorization.apply_start_date,vehicleauthorization.apply_end_date,
+        vehicleauthorization.id as authorizationId,vehicleauthorization.approval_remark,vehicleauthorization.operate_date,
+        vehicleauthorization.authorization_out_time_date,vehicleauthorization.cancel_reason,vehicleauthorization.user_id,
+        vehicleauthorization.address,vehicleauthorization.delay_date as delayDate,vehicleauthorization.delay_remark as delayRemark
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask on vehicletask.id = vehicleauthorization.task_id
+        where 1=1
+        <if test="status!= null and status !=''">
+            and vehicleauthorization.authorization_status = #{status}
+        </if>
+        <if test="condition!= null and condition !=''">
+            and (
+              vehicletask.plate = #{condition}
+              or vehicletask.vehicle_identify_num = #{condition}
+              or vehicleauthorization.applicant_phone = #{condition}
+            )
+        </if>
+        <if test="leaseId!= null and leaseId !=''">
+            and vehicletask.lease_company_user_name = (select t.user_id from system_user t where t.lease_id = #{leaseId} and t.user_role = '11')
+        </if>
+        <if test="userRole=='12'.toString() and provinces != null and provinces.size!=0">
+            and (
+            <foreach collection="provinces" item="item" index="index" >
+                <if test="index!=0">
+                    or vehicletask.fp_province =  #{item}
+                </if>
+                <if test="index==0">
+                    vehicletask.fp_province =  #{item}
+                </if>
+            </foreach>
+            )
+        </if>
+        order by vehicleauthorization.operate_date desc
+        <if test="flag == 0 and page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+</mapper>

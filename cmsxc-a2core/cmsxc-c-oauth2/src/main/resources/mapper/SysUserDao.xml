@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.oauth2.dao.SysUserDao">
+
+    <select id="selectByUserIdRole" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.oauth2.entity.SysRole">
+        select sysRole.* from sys_role sysRole
+        left join sys_user_role sysUserRole on sysUserRole.role_id = sysRole.id
+        where sysUserRole.user_id = #{_parameter} and sysUserRole.user_id is not null
+    </select>
+
+    <select id="selectBySysUserRoleId" parameterType="java.lang.String" resultType="java.lang.String" >
+        select sysUserRole.role_id from sys_user_role sysUserRole
+        inner join sys_role sysRole on sysRole.id = sysUserRole.role_id
+        inner join sys_user sysUser on sysUser.id = sysUserRole.user_id
+        where
+        sysUserRole.user_id = #{_parameter}
+    </select>
+
+    <select id="selectBySysUserRes" parameterType="java.util.List" resultType="java.lang.String">
+        select sysResource.res  from sys_role_resource sysRoleResource
+        inner join sys_role sysRole on sysRole.id = sysRoleResource.role_id
+        inner join sys_resource sysResource on sysResource.id = sysRoleResource.resource_id
+        where
+        sysRoleResource.role_id in
+        <foreach collection="roleIds" item="item" index="index" open="(" separator="," close=")">
+          #{item}
+        </foreach>
+    </select>
+
+</mapper>

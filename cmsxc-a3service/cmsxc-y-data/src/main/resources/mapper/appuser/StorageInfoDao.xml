@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.StorageInfoDao">
+    <!-- 佣金结算列表-->
+    <select id="selectCommissionSettlementList" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.CommissionSettlementListVo">
+        select vehicletask.id as taskId,vehicletask.plate,vehicletask.vehicle_identify_num,vehicletask.service_fee,vehicletask.update_time as finishDate,
+        case when caserecord1.id is not null then '1' else '0' end as flatBedFlag,
+        case when caserecord2.id is not null then '1' else '0' end as keyFlag,
+        case when commissionsettlementinfo.id is null then '01'else commissionsettlementinfo.status end as status,
+        commissionsettlementinfo.apply_date,storageinfo.id as storageInfoId
+        from storage_info storageinfo
+        inner join vehicle_task vehicletask on vehicletask.id = storageinfo.task_id
+        left join case_record caserecord1 on caserecord1.task_id = vehicletask.id  and caserecord1.recovery_company_id = #{recoveryCompanyId} and caserecord1.case_title = '04' and not EXISTS (select * from case_record c1 where c1.update_time > caserecord1.update_time  and c1.task_id = caserecord1.task_id and c1.case_title = caserecord1.case_title )
+        left join case_record caserecord2 on caserecord2.task_id = vehicletask.id and  caserecord2.recovery_company_id = #{recoveryCompanyId} and caserecord2.case_title = '05' and not EXISTS (select * from case_record c2 where c2.update_time > caserecord2.update_time  and c2.task_id = caserecord2.task_id and c2.case_title = caserecord2.case_title )
+        left join commission_settlement_info commissionsettlementinfo on vehicletask.id = commissionsettlementinfo.task_id
+        where storageinfo.recovery_company_id = #{recoveryCompanyId}
+        and storageinfo.state = '08'
+        <if test=" status=='1'.toString()">
+            and commissionsettlementinfo.id is null
+        </if>
+        <if test=" status=='2'.toString()">
+            and commissionsettlementinfo.id is not null
+            and (
+                commissionsettlementinfo.status = '01'
+            or  commissionsettlementinfo.status = '02'
+            )
+        </if>
+        <if test=" status=='3'.toString()">
+            and commissionsettlementinfo.id is not null
+            and (
+                commissionsettlementinfo.status = '03'
+            or  commissionsettlementinfo.status = '05'
+            )
+        </if>
+        <if test=" status=='4'.toString()">
+            and commissionsettlementinfo.id is not null
+            and commissionsettlementinfo.status = '04'
+        </if>
+        <if test="plate != null and plate != ''">
+            and vehicletask.plate = #{plate}
+        </if>
+        order by vehicletask.update_time desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+    <!-- 佣金结算列表数量-->
+    <select id="selectCommissionSettlementCount" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(*)
+        from storage_info storageinfo
+        inner join vehicle_task vehicletask on vehicletask.id = storageinfo.task_id
+        left join commission_settlement_info commissionsettlementinfo on vehicletask.id = commissionsettlementinfo.task_id
+        where storageinfo.recovery_company_id = #{recoveryCompanyId}
+        and storageinfo.state = '08'
+        <if test=" status=='01'.toString()">
+            and commissionsettlementinfo.id is null
+        </if>
+        <if test=" status=='02'.toString()">
+            and commissionsettlementinfo.id is not null
+            and (
+            commissionsettlementinfo.status = '01'
+            or  commissionsettlementinfo.status = '02'
+            )
+        </if>
+        <if test=" status=='03'.toString()">
+            and commissionsettlementinfo.id is not null
+            and (
+            commissionsettlementinfo.status = '03'
+            or  commissionsettlementinfo.status = '05'
+            )
+        </if>
+        <if test=" status=='04'.toString()">
+            and commissionsettlementinfo.id is not null
+            and commissionsettlementinfo.status = '04'
+        </if>
+        <if test="plate != null and plate != ''">
+            and vehicletask.plate = #{plate}
+        </if>
+    </select>
+
+    <!-- 入库管理列表查询_库管/停车场公司管理员-->
+    <select id="selectParkingStorageList" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.StorageListVo">
+        select storageInfo.id as storageId,vehicleTask.id as taskId,parkingInfo.id as parkingId,storageInfo.state,
+        vehicleTask.plate,vehicleTask.vehicle_identify_num,parkingInfo.address,
+        case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as brand,storageInfo.arrive_time,storageInfo.finish_time,
+        storageInfo.stop_time,storageInfo.create_time as recoveryTime
+        from storage_info storageInfo
+        inner join vehicle_task vehicleTask on storageInfo.task_id = vehicleTask.id
+        inner join parking_info parkingInfo on storageInfo.parking_id =parkingInfo.id
+        where 1=1
+        <if test="parkingId != null and parkingId != ''">
+            and parkingInfo.id = #{parkingId}
+        </if>
+        <if test="parkingId == null or parkingId == ''.toString()">
+            and parkingInfo.id in
+            (
+                select id from parking_info
+                where state = '1'
+                <if test="userRole == '21'.toString()">
+                    and parking_admin_id = #{userId}
+                </if>
+                <if test="userRole == '22'.toString()">
+                    and parking_manager = #{userId}
+                </if>
+            )
+        </if>
+        <if test=" status=='01'.toString()">
+            and storageInfo.state not in ('08','09','99')
+        </if>
+        <if test=" status=='02'.toString()">
+            and storageInfo.state in ('08','09')
+        </if>
+        <if test="plate != null and plate != ''">
+            and vehicleTask.plate = #{plate}
+        </if>
+        order by storageInfo.update_time desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+
+    <!-- 获取停车场管理员入库管理页面停车场下拉框数据 -->
+    <select id="selectParkingDdlAdmin" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.ParkingDdlVo">
+        select parkingInfo.id,parkingInfo.parking_name as name
+        from parking_info parkingInfo
+        where parking_admin_id = #{userId}
+        order by parkingInfo.update_time desc
+    </select>
+
+</mapper>

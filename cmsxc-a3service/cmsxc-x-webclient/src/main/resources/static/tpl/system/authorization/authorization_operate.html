@@ -1,0 +1,115 @@
+<div class="modal-header">
+    <h4>授权详情</h4>
+</div>
+<div class="modal-body">
+    <div class="form-group row">
+        <form name="form" class="form-validation" novalidate>
+            <ul type="square">
+                <li style="font-weight: bold;font-size: 16px;">申请信息</li>
+                <table width="99%" style="margin: 0 auto">
+                    <tbody>
+                    <tr>
+                        <td style="width:20%"> 姓名: </td>
+                        <td style="width:30%" > <label class="text-left m-b-xs m-t-xs">{{rowEntity.name }}</label> </td>
+                        <td style="width:20%"> 车牌号: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.plate }}</label> </td>
+                    </tr>
+                    <tr>
+                        <td style="width:20%"> 服务费: </td>
+                        <td style="width:30%" > <label class="text-left m-b-xs m-t-xs">{{rowEntity.serviceFeeValue }}</label> </td>
+                        <td style="width:20%"> 车辆所在省: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.vehicleProvince }}</label> </td>
+                    </tr>
+                    <tr>
+                        <td style="width:20%"> 车辆所在市: </td>
+                        <td style="width:30%" > <label class="text-left m-b-xs m-t-xs">{{rowEntity.vehicleCity }}</label> </td>
+                        <td style="width:20%"> 车架号: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.vehicleIdentifyNum}}</label> </td>
+                    </tr>
+                    <tr>
+                        <td style="width:20%"> 发动机: </td>
+                        <td style="width:30%" > <label class="text-left m-b-xs m-t-xs">{{rowEntity.engineNo}}</label> </td>
+                        <td style="width:20%"> 车型: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.vehicleType}}</label> </td>
+                    </tr>
+                    <tr>
+                        <td style="width:20%"> 车辆颜色: </td>
+                        <td style="width:30%" > <label class="text-left m-b-xs m-t-xs">{{rowEntity.vehicleColor}}</label> </td>
+                    </tr>
+                    <tr>
+                        <td style="width:20%"> 工单号: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.taskNum}}</label></td>
+                        <td style="width:20%"> 用户手机: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.userId}}</label></td>
+                    </tr>
+                    <tr>
+                        <td style="width:20%"> 申请人姓名: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.applicantName}}</label></td>
+                        <td style="width:20%"> 申请人手机号: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.applicantPhone}}</label></td>
+                    </tr>
+                    <tr>
+                        <td style="width:20%"> 申请人身份证: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.applicantIdentityNum}}</label> </td>
+                        <td style="width:20%"> 申请备注: </td>
+                        <td style="width:30%"> <label class="text-left m-b-xs m-t-xs">{{rowEntity.remark}}</label></td>
+                    </tr>
+                    <tr>
+                        <td style="width:20%"> 申请日期: </td>
+                        <td style="width:30%" > <label class="text-left m-b-xs m-t-xs">{{rowEntity.applyStartDate | date:"yyyy-MM-dd HH:mm:ss" }}</label> </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <br/>
+                <li style="font-weight: bold;font-size: 16px;">凭证信息</li>
+                <table style="border-collapse:separate; border-spacing:10px;">
+                    <tbody>
+                    <tr><td style="width:20%"> 图片: </td></tr>
+                    <tr>
+                        <td width="100%" style="margin-left: 50px">
+                            <div class="pull-left m-r-xs" ng-repeat="item in photoList" ng-init="outerIndex = $index">
+                                <img ng-src="{{item}}" height="120px" width="120px" alt="" style="margin-left: 10px" ng-click="changePic($event)">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr><td style="width:20%"> 视频: </td></tr>
+                    <tr>
+                        <td>
+                            <div class="pull-left m-r-xs">
+                                <video ng-src="{{trustSrc(vedioPath)}}" width="200px" height="200px" controls="controls">
+                                    your browser does not support the video tag
+                                </video>&nbsp;&nbsp;&nbsp;
+                                <span style="color: red">*若视频无法正常播放，建议使用谷歌浏览器打开哦</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width:100%"> <label>申请授权地址:</label>&nbsp;&nbsp;&nbsp;<label class="text-left m-b-xs m-t-xs">{{rowEntity.address}}</label> </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <li style="font-weight: bold;font-size: 16px;">填写信息</li><br/>
+                <table width="99%" style="margin: 0 auto">
+                    <tbody>
+                    <tr>
+                        <td style="width: 15%;">原因：</td>
+                        <td style="width: 50%;">
+                            <textarea maxlength="100" placeholder="请填写原因，内容不得超过100字" class="form-control m-b-xs" ng-model="vo.remark" required></textarea>
+                        </td>
+                        <td style="width: 35%;">
+                        <span style="color: red" ng-show="remark == null || remark == ''">
+                            <span ng-show="remark == null || remark == ''">*原因不能为空</span>
+                        </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <br/>
+            </ul>
+        </form>
+    </div>
+</div>
+<div class="modal-footer  ng-scope">
+    <button class="btn btn-default pull-right" ng-click="close()" style="margin-left: 6px;" ng-disabled='isEnable'>关闭</button>
+    <button type="submit" class="btn btn-default pull-right" ng-click="authorization()" ng-disabled='form.$invalid || isEnable'>授权</button>
+</div>

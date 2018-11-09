@@ -1,0 +1,47 @@
+<div class="bg-light lter b-b wrapper-md">
+  <h1 class="m-n font-thin h4">新闻发布</h1>
+</div>
+<div class="wrapper-md" ng-controller="newsPublishController">
+  <div>
+    <toaster-container toaster-options="{'position-class': 'toast-top-right', 'close-button':true}"></toaster-container>
+  </div>
+  <div class="row">
+    <div class="col-lg-2 col-md-2 col-sm-2 m-b">
+      文章标题：
+    </div>
+    <div class="col-lg-10 col-md-10 col-sm-10 m-b">
+      <input type="text" class="form-control" ng-model="news.title"/>
+    </div>
+    <div class="col-lg-2 col-md-2 col-sm-2 m-b">
+      发布类型：
+    </div>
+    <div class="col-lg-10 col-md-10 col-sm-10 m-b">
+      <select class="form-control" ng-options="type.name for type in types" ng-model="type">
+      </select>
+    </div>
+    <div class="col-lg-2 col-md-2 col-sm-2 m-b" ng-show="type.type == '1'">
+      添加封面：
+    </div>
+    <div class="col-lg-10 col-md-10 col-sm-10 m-b" ng-show="type.type == '1'">
+      <input class="form-control m-b-sm" type="file" file-model="file">
+      <button class="btn btn-default" ng-click="uploadCover()">上传</button>
+    </div>
+    <div class="col-lg-2 col-md-2 col-sm-2 m-b">
+      图像上传：
+    </div>
+    <div class="col-lg-10 col-md-10 col-sm-10 m-b">
+      <input class="form-control m-b-sm" type="file" file-model="file">
+      <button class="btn btn-default" ng-click="upload()">上传</button>
+      <label class="">{{url}}</label>
+    </div>
+    <div class="col-lg-2 col-md-2 col-sm-2 m-b">
+      文本编辑：
+    </div>
+    <div class="col-lg-10 col-md-10 col-sm-10 m-b">
+    <div text-angular ng-model="news.content"></div>
+    </div>
+    <div class="col-lg-10 col-md-10 col-sm-10 col-lg-offset-2 col-md-offset-2">
+      <button class="btn btn-success" ng-click="save()">保存新闻</button>
+    </div>
+  </div>
+</div>

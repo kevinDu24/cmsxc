@@ -1,0 +1,32 @@
+<div class="modal-header">
+    <h3 class="modal-title">修改角色</h3>
+</div>
+<div class="panel-body">
+    <form name="form" class="form-validation" novalidate>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">角色名称</b><b class="form-error"></b>:</label>
+            <label class="col-sm-3 control-label text-left"><b class="modal-body">{{sysRole.roleName}}</b><b class="form-error"></b></label>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">角色ID</b><b class="form-error"></b>:</label>
+            <label class="col-sm-3 control-label text-left"><b class="modal-body">{{sysRole.id}}</b><b class="form-error"></b></label>
+        </div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">拥有菜单</b>:</label>
+            <div class="col-sm-9">
+                <div ivh-treeview="sysResources"
+                     ivh-treeview-label-attribute="'description'"
+                     ivh-treeview-on-cb-change="fancy.otherAwesomeCallback(ivhNode, ivhIsSelected, ivhTree)">
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
+<div class="modal-footer ng-scope">
+    <button class="btn btn-default" ng-click="close()">取消</button>
+    <button type="submit" class="btn btn-success" ng-click="modify()" ng-disabled='submit'>保存</button>
+</div>

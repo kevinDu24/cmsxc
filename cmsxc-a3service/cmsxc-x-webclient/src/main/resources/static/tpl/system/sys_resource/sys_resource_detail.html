@@ -1,0 +1,66 @@
+<div class="modal-header">
+    <h3 class="modal-title">菜单详情</h3>
+</div>
+<div class="modal-body">
+    <form name="form" class="form-validation" novalidate>
+
+        <div class="panel-body">
+            <div class="form-group row">
+                <label class="col-sm-3 control-label text-right">菜单英文名称:</label>
+                <div class="col-sm-9">
+                    <label class="col-sm-12 control-label text-left">{{sysRes.name}}</label>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group row">
+                <label class="col-sm-3 control-label text-right">菜单中文名称:</label>
+                <div class="col-sm-9">
+                    <label class="col-sm-12 control-label text-left">{{sysRes.description}}</label>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group row">
+                <label class="col-sm-3 control-label text-right">资源路径:</label>
+                <div class="col-sm-9">
+                    <label class="col-sm-12 control-label text-left">{{sysRes.res}}</label>
+                </div>
+            </div>
+
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group row">
+                <label class="col-sm-3 control-label text-right">类型:</label>
+                <div class="col-sm-9">
+                    <label class="col-sm-12 control-label text-left">{{sysRes.type}}</label>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+
+            <div class="form-group row">
+                <label class="col-sm-3 control-label text-right">父级菜单:</label>
+                <div class="col-sm-9">
+                    <label class="col-sm-12 control-label text-left">{{sysRes.parentId}}</label>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group row">
+                <label class="col-sm-3 control-label text-right">排序:</label>
+                <div class="col-sm-9">
+                    <label class="col-sm-12 control-label text-left">{{sysRes.sort}}</label>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal-footer ng-scope">
+    <button class="btn btn-default" ng-click="close()">关闭</button>
+</div>

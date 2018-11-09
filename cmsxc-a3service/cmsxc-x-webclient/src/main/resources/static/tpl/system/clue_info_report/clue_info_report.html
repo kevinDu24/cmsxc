@@ -1,0 +1,58 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h4">线索扫描</h1>
+</div>
+<div ng-controller="clue_info_report_controller">
+    <div>
+        <toaster-container toaster-options="{'position-class': 'toast-top-right', 'close-button':true}"></toaster-container>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body wrapper-sm">
+            <div class="row">
+                <div class="col-lg-12">
+                    <form class="form-inline" role="form">
+                        <div class="form-group">
+                            <!--<label class="sr-only" >手机号 </label>-->
+                            <input class="form-control m-b-xs" ng-model="plate" placeholder="车牌号" style="width: 120px;">
+                        </div>
+                        <div class="form-group">
+                            <input id="startDate" ng-model="startDate" class="form-control w-sm pull-left m-r-xs m-b-xs" placeholder="开始日期" type="text"  onClick="WdatePicker({dateFmt:'yyyy-MM-dd',skin:'twoer',maxDate:'#F{$dp.$D(\'endDate\')}'})" style="width: 120px;">
+                            <button id="btnStartDate" onClick="WdatePicker({el:'startDate',dateFmt:'yyyy-MM-dd',skin:'twoer',maxDate:'#F{$dp.$D(\'endDate\')}'})" type="button" class="btn btn-default pull-left m-r-xs m-b-xs"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <!--<input id="startDate" ng-model="startDate" class="form-control w-sm pull-left m-r-xs m-b-xs" placeholder="开始日期" type="text" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',skin:'twoer'})" style="width: 120px;">-->
+                        </div>
+                        <div class="form-group">
+                            <input id="endDate" ng-model="endDate" class="form-control w-sm pull-left m-r-xs m-b-xs" placeholder="结束日期" type="text"  onClick="WdatePicker({dateFmt:'yyyy-MM-dd',skin:'twoer',minDate:'#F{$dp.$D(\'startDate\')}'}) " style="width: 120px;">
+                            <button id="btnEndDate" onClick="WdatePicker({el:'endDate',dateFmt:'yyyy-MM-dd',skin:'twoer',minDate:'#F{$dp.$D(\'startDate\')}'})" type="button" class="btn btn-default pull-left m-r-xs m-b-xs"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <!--<input id="endDate" ng-model="endDate" class="form-control w-sm pull-left m-r-xs m-b-xs" placeholder="结束日期" type="text" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',skin:'twoer'})" style="width: 120px;">-->
+                        </div>
+                        <div class="form-group">
+                            <select ng-options="recoveryCompany.recoveryCompanyId as recoveryCompany.recoveryCompanyName for recoveryCompany in recoveryCompanysVoList" class="form-control w-lg m-r-xs pull-left" ng-model="recoveryCompanyId" id="recoveryCompanyId" style="width: 120px;">
+                                <option value="">收车公司</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <select  class="form-control w-lg m-r-xs" ng-model="targetFlag" style="width: 120px;" >
+                                <option value="">是否命中</option>
+                                <option value="0" >未命中</option>
+                                <option value="1">已命中</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group m-b-sm">
+                            <div class="btn-group">
+                                <button class="btn btn-default m-b-xs btn-info" ng-click="search()" ><i class="fa fa-search"></i>查询</button>
+                                <button class="btn btn-default m-b-xs" ng-click="reset()" ><i class="fa  icon-refresh"></i>重置</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group pull-right">
+                            <div class="btn-group">
+                                <button class="btn btn-default m-b-xs" ng-click="export()" ><i class="glyphicon glyphicon-export"></i>导出</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <table border="1" class="table table-striped m-b-none" id="clue_info_report_table"></table>
+    </div>
+</div>

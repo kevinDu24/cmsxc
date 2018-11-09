@@ -1,0 +1,37 @@
+
+
+<!-- list -->
+<ul class="nav" ng-controller="navController">
+
+  <li ng-repeat="first in menus | orderBy:'sort'" ng-class="{active:$state.includes('app.table')}">
+
+    <a href class="auto">
+      <span class="pull-right text-muted">
+        <i class="fa fa-fw fa-angle-right text"></i>
+        <i class="fa fa-fw fa-angle-down text-active"></i>
+      </span>
+      <!--<b class="label bg-primary pull-right">2</b>-->
+      <i class="glyphicon glyphicon-list"></i>
+      <span><b style="color: #00a8f3">{{first.description}}</b></span>
+    </a>
+    <ul class="nav nav-sub dk">
+      <!--<li class="nav-sub-header">-->
+        <!--<a href>-->
+          <!--<span ><b style="color: #00a8f3">{{first.description}}</b></span>-->
+        <!--</a>-->
+      <!--</li>-->
+      <li ui-sref-active="active" ng-repeat="second in first.children | orderBy:'sort'">
+        <a ui-sref="{{second.res}}">
+          <span>{{second.description}}</span>
+        </a>
+      </li>
+
+    </ul>
+
+  </li>
+
+
+
+
+</ul>
+<!-- / list -->

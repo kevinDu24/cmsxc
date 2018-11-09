@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appbusiness.dao.RecoveryGroupDao">
+    <!-- 根据收车公司id取出所有小组及组员数量-->
+    <select id="selectRecoveryGroupListByRecoveryCompanyId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.GroupListVo">
+        select recoverygroup.id as groupId, recoverygroup.group_name as groupName, count(recoverygroupuser.id) as countNum
+        from recovery_group recoverygroup
+        inner join recovery_group_user recoverygroupuser on recoverygroup.id = recoverygroupuser.recovery_group_id
+        where recoverygroup.recovery_company_id = #{recoveryCompanyId}
+        group by groupId, groupName
+        order by recoverygroup.create_time desc
+    </select>
+    <!-- 根据收车公司id和角色取出所有未分组成员信息-->
+    <select id="selectUserByRecoveryCompanyIdAndUserRole" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.UserListVo">
+        select systemuser.user_id as userId, systemuser.user_name as userName,systemuser.user_photo as photoUrl
+        from system_user systemuser
+        where systemuser.user_id not in (select group_user_id from recovery_group_user)
+        and systemuser.recovery_company_id = #{recoveryCompanyId}
+        and systemuser.user_role = '03'
+        order by systemuser.create_time desc
+    </select>
+    <!-- 根据用户id或用户姓名查找业务员-->
+    <select id="selectSalesmanByUserIdOrUserName" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.SearchSalesmanVo">
+        select systemuser.user_id as userId, systemuser.user_name as userName, recoverygroup.group_name as groupName,
+        case when systemuser.user_id = recoverygroup.group_leader_id then '1' else '0' end as leaderFlag, systemuser.user_photo as photoUrl
+        from system_user systemuser
+        left join recovery_group_user recoverygroupuser on systemuser.user_id = recoverygroupuser.group_user_id
+        left join  recovery_group recoverygroup on recoverygroup.id = recoverygroupuser.recovery_group_id and recoverygroup.recovery_company_id = #{recoveryCompanyId}
+        where systemuser.recovery_company_id = #{recoveryCompanyId}
+        and systemuser.user_role = '03'
+        <if test="inputValue!=null and inputValue!=''">
+            and (systemuser.user_id like #{inputValue}
+            or systemuser.user_name like #{inputValue})
+        </if>
+        order by recoverygroup.id desc ,systemuser.create_time desc
+    </select>
+    <!-- 根据分组id获取组员信息-->
+    <select id="selectGroupUserByGroupId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.SearchSalesmanVo">
+        select systemuser.user_id as userId, systemuser.user_name as userName,systemuser.user_photo as photoUrl,
+        case when systemuser.user_id = recoverygroup.group_leader_id then '1' else '0' end as leaderFlag
+        from recovery_group_user recoverygroupuser
+        inner join system_user systemuser on systemuser.user_id = recoverygroupuser.group_user_id
+        inner join  recovery_group recoverygroup on recoverygroup.id = recoverygroupuser.recovery_group_id
+        where recoverygroupuser.recovery_group_id = #{recoveryGroupId}
+        order by leaderFlag desc
+    </select>
+    <!-- 根据分组id删除分组-->
+    <delete id="deleteByRecoveryGroupId" parameterType="java.lang.String">
+        delete from recovery_group
+        where id = #{groupId}
+    </delete>
+
+
+</mapper>

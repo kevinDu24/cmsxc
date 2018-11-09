@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.system.dao.SysResourceDao">
+
+    <select id="selectSysResBySysUserId" parameterType="java.util.List" resultType="java.lang.String">
+        select sysResource.res  from sys_role_resource sysRoleResource
+        inner join sys_role sysRole on sysRole.id = sysRoleResource.role_id
+        inner join sys_resource sysResource on sysResource.id = sysRoleResource.resource_id and sysResource.type = ${type}
+        where
+        sysRoleResource.role_id in
+        <foreach collection="roleIds" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="selectSysResMenuBySysRoleId" parameterType="java.util.List" resultType="cn.com.leadu.cmsxc.pojo.system.entity.SysResource">
+        select sysResource.*  from sys_role_resource sysRoleResource
+        inner join sys_role sysRole on sysRole.id = sysRoleResource.role_id
+        inner join sys_resource sysResource on sysResource.id = sysRoleResource.resource_id and sysResource.type = ${type}
+        where
+        sysRoleResource.role_id in
+        <foreach collection="roleIds" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

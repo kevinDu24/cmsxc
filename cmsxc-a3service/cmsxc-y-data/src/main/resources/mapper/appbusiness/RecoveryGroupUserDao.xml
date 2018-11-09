@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appbusiness.dao.RecoveryGroupUserDao">
+
+    <!-- 根据用户id和分组id删除组员-->
+    <delete id="deleteByGroupIdAndUserId" parameterType="java.lang.String">
+        delete from recovery_group_user
+        where recovery_group_id = #{recoveryGroupId}
+        and group_user_id = #{groupUserId}
+    </delete>
+    <!-- 根据分组id删除组员-->
+    <delete id="deleteByGroupId" parameterType="java.lang.String">
+        delete from recovery_group_user
+        where recovery_group_id = #{recoveryGroupId}
+    </delete>
+    <!-- 通过组id获取小组成员并且按照客户端类型分类返回-->
+    <select id="selectGroupUserClientByGroupId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.GroupUserClientVo">
+        select groupUser.group_user_id as userId,userDeviceInfo.device_token,userDeviceInfo.client
+        from recovery_group_user groupUser
+        left join user_device_info userDeviceInfo on groupUser.group_user_id = userDeviceInfo.user_id
+        where groupUser.recovery_group_id = #{recoveryGroupId}
+    </select>
+    <!-- 通过收车公司id与角色获取该收车公司内勤人员客户端类型-->
+    <select id="selectUserClientByRecoveryCompanyId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.GroupUserClientVo">
+        select systemUser.user_id as userId,userDeviceInfo.device_token,userDeviceInfo.client,systemUser.user_phone
+        from system_user systemUser
+        left join user_device_info userDeviceInfo on systemUser.user_id = userDeviceInfo.user_id
+        where systemUser.recovery_company_id = #{recoveryCompanyId}
+        and systemUser.user_role = '02'
+    </select>
+
+</mapper>

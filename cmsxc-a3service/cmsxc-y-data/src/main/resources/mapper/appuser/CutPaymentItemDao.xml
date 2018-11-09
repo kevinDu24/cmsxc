@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.CutPaymentItemDao">
+
+    <!-- 根据佣金结算信息id获取扣款项-->
+    <select id="selectByCommissionSettlementInfoId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.CutPaymentItemVo">
+        select cutpaymentitem.cut_payment_name,cutpaymentitem.cut_payment_count
+        from cut_payment_item cutpaymentitem
+        where cutpaymentitem.commission_settlement_info_id = #{commissionSettlementInfoId}
+
+    </select>
+</mapper>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.system.dao.SystemUserDao">
+    <select id="findSysUserByPage" parameterType="cn.com.leadu.cmsxc.pojo.system.vo.SystemUserVo" resultType="cn.com.leadu.cmsxc.pojo.system.vo.SystemUserVo">
+        select systemUser.id, systemUser.user_id, systemUser.user_password, systemUser.user_role,
+        systemUser.user_name, recoveryCompany.recovery_full_name as recoveryFullName, leaseCompany.lease_full_name as leaseFullName
+        from system_user systemUser
+        left join recovery_company recoveryCompany
+        on systemUser.recovery_company_id = recoveryCompany.id
+        left join lease_company leaseCompany
+        on systemUser.lease_id = leaseCompany.id
+        where 1=1
+        <if test="systemUserVo.userId !=null and systemUserVo.userId!=''">
+            and systemUser.user_id = #{systemUserVo.userId}
+        </if>
+        <if test="systemUserVo.userName !=null and systemUserVo.userName!=''">
+            and systemUser.user_name = #{systemUserVo.userName}
+        </if>
+        <if test="systemUserVo.userRole !=null and systemUserVo.userRole!=''">
+            and systemUser.user_role = #{systemUserVo.userRole}
+        </if>
+        <if test="role!=null and role!='' and role != '0'.toString()">
+          <if test="role == '01'.toString()">
+            and systemUser.recovery_company_id = #{recoveryCompanyId}
+          </if>
+          <if test="role == '11'.toString()">
+            and systemUser.lease_id = #{leaseId}
+          </if>
+        </if>
+        order by systemUser.create_time desc
+    </select>
+    <!-- 用户信息查询-->
+    <select id="findSysUserListByPage" parameterType="cn.com.leadu.cmsxc.pojo.system.vo.SysUserSearchVo" resultType="cn.com.leadu.cmsxc.pojo.system.vo.SysUserSearchListVo">
+        select systemUser.user_id as userId, systemUser.user_name as userName, systemUser.user_role as userRole,recoveryCompany.recovery_full_name as recoveryFullName,
+        DATE_FORMAT(systemUser.create_time,'%Y-%m-%d %H:%i:%s') as createTime, systemUser.total_score as totalScore, count( clueinfo.id) as scanCount
+        from system_user systemUser
+        left join recovery_company recoveryCompany on systemUser.recovery_company_id = recoveryCompany.id
+        left join clue_info clueinfo on clueinfo.user_id = systemUser.user_id
+        <if test=" role == '11' or role == '12' ">
+            left join recovery_lease_relation recoveryleaserelation on recoveryleaserelation.recovery_company_id = recoveryCompany.id
+            and recoveryleaserelation.lease_id  = #{leaseId}
+        </if>
+        where 1=1
+        <if test="role == '0'.toString()">
+            and systemUser.user_role in  ('02','03','04','09')
+        </if>
+        <if test=" role == '11' or role == '12' ">
+            and systemUser.user_role in  ('02','03','09')
+        </if>
+        <if test="sysUserSearchVo.userId !=null and sysUserSearchVo.userId!=''">
+            and systemUser.user_id = #{sysUserSearchVo.userId}
+        </if>
+        <if test="sysUserSearchVo.userName !=null and sysUserSearchVo.userName!=''">
+            and systemUser.user_name = #{sysUserSearchVo.userName}
+        </if>
+        <if test="sysUserSearchVo.startDate !=null and sysUserSearchVo.startDate!=''">
+            and DATE_FORMAT(systemUser.create_time,'%Y-%m-%d') >= DATE_FORMAT(#{sysUserSearchVo.startDate},'%Y-%m-%d')
+        </if>
+        <if test="sysUserSearchVo.endDate !=null and sysUserSearchVo.endDate!=''">
+            and DATE_FORMAT(#{sysUserSearchVo.endDate},'%Y-%m-%d') >= DATE_FORMAT(systemUser.create_time,'%Y-%m-%d')
+        </if>
+        <if test="sysUserSearchVo.recoveryCompanyId !=null and sysUserSearchVo.recoveryCompanyId!='' and sysUserSearchVo.recoveryCompanyId!='000000'">
+            and systemUser.recovery_company_id = #{sysUserSearchVo.recoveryCompanyId}
+        </if>
+        <if test="sysUserSearchVo.recoveryCompanyId !=null and sysUserSearchVo.recoveryCompanyId!='' and sysUserSearchVo.recoveryCompanyId=='000000'">
+            and systemUser.recovery_company_id is null
+        </if>
+        <if test="sysUserSearchVo.userRole !=null and sysUserSearchVo.userRole!=''">
+            and systemUser.user_role = #{sysUserSearchVo.userRole}
+        </if>
+        group by userId,userName,userRole,recoveryFullName,createTime,totalScore
+        order by createTime desc
+    </select>
+
+    <!-- 查询角色管理列表-->
+    <select id="selectUserList" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.UserRoleListVo">
+        select id, user_id, user_name, user_role, enable_flag, user_photo
+        from system_user
+        where lease_id = #{leaseId}
+        and user_role = '12'
+        order by enable_flag desc , create_time desc
+    </select>
+    <!-- 根据委托公司id及工单所在省份，获取审核人员信息-->
+    <select id="selectLeaseAdminUserList" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.system.entity.SystemUser">
+        select systemuser.*
+        from system_user systemuser
+        inner join auditor_area auditorarea on systemuser.id = auditorarea.user_id
+        inner join vehicle_task vehicetask on auditorarea.province = vehicetask.fp_province
+        where systemuser.lease_id = #{leaseId}
+        and systemuser.user_role = '12'
+        and vehicetask.id = #{taskId}
+        and systemuser.enable_flag = '1'
+    </select>
+
+    <!-- 根据业务员用户名获取其手机号、姓名、所在收车公司-->
+    <select id="selectInfoByUserId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.ScanInfoVo">
+        select systemUser.user_phone phoneNum, systemUser.user_name as name, recoveryCompany.recovery_full_name as recoveryCompany
+        from system_user systemUser
+        inner join recovery_company recoveryCompany
+        on systemUser.recovery_company_id = recoveryCompany.id
+        where systemUser.user_id = #{userId}
+    </select>
+
+
+</mapper>

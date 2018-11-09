@@ -1,0 +1,23 @@
+server:
+  port: ${server-port:9211}
+
+spring:
+  application:
+    name: cmsxc-c-monitor
+  boot:
+    admin:
+      context-path: /monitor
+
+management:
+  security:
+    enabled: false
+
+
+eureka:
+  instance:
+    statusPageUrlPath: /info
+    healthCheckUrlPath: /health
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/

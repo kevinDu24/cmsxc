@@ -1,0 +1,68 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h4">组织机构管理</h1>
+</div>
+<div  ng-controller="sys_organization_list_controller">
+    <div>
+        <toaster-container toaster-options="{'position-class': 'toast-top-right', 'close-button':true}"></toaster-container>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body wrapper-sm">
+            <div class="row">
+                <div class="col-lg-12">
+                    <form class="form-inline" role="form">
+                        <div class="form-group">
+                            <label class="sr-only" >组织机构名称 </label>
+                            <input class="form-control m-b-xs" ng-model="orgName" placeholder="组织机构名称">
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" >组织机构编码</label>
+                            <input class="form-control m-b-xs" ng-model="orgCode" placeholder="组织机构编码">
+                        </div>
+                        <div class="form-group">
+                            <select ng-model="orgType" class="form-control m-b-xs">
+                                <option value="">---选择组织机构类型---</option>
+                                <option value="0">公司/集团</option>
+                                <option value="1">区域</option>
+                                <option value="2">分公司</option>
+                                <option value="3">SP</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group m-b-sm">
+                            <div class="btn-group">
+                                <button class="btn btn-default m-b-xs btn-info" ng-click="searchSysOrganization()" ><i class="fa fa-search"></i>查询</button>
+                                <button class="btn btn-default m-b-xs" ng-click="resetSysOrganization()" ><i class="fa  icon-refresh"></i>重置</button>
+                            </div>
+                        </div>
+
+
+                        <div class="form-group pull-right">
+                            <div class="btn-group">
+                                <button class="btn btn-default m-b-xs" ng-click="saveSysOrganization()"><i class="fa fa-plus"></i>添加</button>
+                                <button class="btn btn-default m-b-xs" ng-click="modifySysOrganization()"><i class="fa icon-pencil"></i>修改</button>
+                                <button class="btn btn-default m-b-xs" ng-click="deleteSysOrganization()"><i class="fa fa-trash-o"></i>删除</button>
+                                <button class="btn btn-default m-b-xs" ng-click="manageSysOrganization()">管理下级</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!--<div class="col-lg-12 form-inline panel panel-default">-->
+            <!--<div class="col-lg-2 " >-->
+                <!--<div id="tree" style="max-height: 400px;overflow-y:auto;white-space:nowrap;font-size: 6px;"></div>-->
+            <!--</div>-->
+
+            <!--<div class="col-lg-10 ">-->
+                <table border="1" class="table table-striped m-b-none" id="sys_organization_table">
+                </table>
+            <!--</div>-->
+        <!--</div>-->
+    </div>
+</div>
+
+
+<div class="modal-footer ng-scope">
+    <button class="btn btn-default" ng-click="close()">取消</button>
+</div>

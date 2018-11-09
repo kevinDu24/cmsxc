@@ -1,0 +1,39 @@
+<div class="container w-xxl w-auto-xs" ng-controller="SigninFormController" ng-init="app.settings.container = false;">
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+  <p>&nbsp;</p>
+
+  <h2 class="block m-t" style="text-align:center;color: #FFFFFF;margin-bottom: 20px;font-weight:bold;" >{{app.name}}</h2>
+  <div class="m-b-lg">
+
+    <form name="form" class="form-validation" novalidate>
+
+      <div class="alert alert-danger alert-dismissable" ng-show="authError">
+        <button type="button" class="close" data-dismiss="alert"
+                aria-hidden="true" ng-click="close()">
+          &times;
+        </button>
+        {{authError}}
+      </div>
+      <div class="list-group list-group-sm">
+        <div class="list-group-item">
+          <input  placeholder="请填写您的账号" class="form-control no-border" ng-model="user.userName" required>
+        </div>
+        <div class="list-group-item">
+           <input type="password" placeholder="请填写您的密码" class="form-control no-border" ng-model="user.password" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-lg btn-primary btn-block" style="background-color:#006cff" ng-click="login()">
+        登&nbsp;&nbsp;&nbsp;&nbsp;录
+      </button>
+      <!--
+      <div class="line line-dashed"></div>
+      <p class="text-center" style="color: #FFFFFF"><small>如果您还没有账号，请点击下面按钮?</small></p>
+      <a ui-sref="access.signup" class="btn btn-lg btn-default btn-block">创建账号</a>
+      -->
+    </form>
+  </div>
+  <div class="text-center" ng-include="'tpl/blocks/page_footer.html'"></div>
+</div>

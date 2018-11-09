@@ -1,0 +1,25 @@
+server:
+  ssl:
+    key-store: /cmsxc/ssl/keystore.p12
+    key-store-password: leadu2016
+    key-store-type: PKCS12
+    key-alias: tomcat
+
+eureka:
+  instance:
+    statusPageUrlPath: /info
+    healthCheckUrlPath: /health
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+spring:
+  cloud:
+    config:
+      name: cmsxc
+      profile: g-common-${spring.profiles.active},z-external-${spring.profiles.active}
+      discovery:
+        enabled: true
+        service-id: cmsxc-b-config
+

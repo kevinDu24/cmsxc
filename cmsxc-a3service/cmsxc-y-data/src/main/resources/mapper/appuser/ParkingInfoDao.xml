@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.ParkingInfoDao">
+
+    <!-- 获取停车场公司列表-->
+    <select id="selectCompanyList" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.ParkingCompanyListVo">
+        SELECT systemUser.user_name,systemUser.enable_flag,systemUser.user_id,COUNT(parkingInfo.id) as num
+        from system_user systemUser
+        inner join parking_lease_relation relation
+        on systemUser.id = relation.parking_admin_id
+        and relation.lease_id = #{leaseId}
+        left join parking_info parkingInfo
+        on parkingInfo.parking_admin_id = systemUser.user_id
+        and systemUser.user_role = '21'
+        GROUP BY systemUser.user_name
+        order by systemUser.create_time desc,systemUser.enable_flag desc
+    </select>
+
+    <!-- 获取停车场列表-->
+    <select id="selectParkingList" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.ParkingListVo">
+        SELECT parkingInfo.id, parkingInfo.parking_name, systemUser.user_name as parkingManagerName, parkingInfo.state, parkingInfo.parking_manager, parkingInfo.address
+        from parking_info parkingInfo
+        inner join system_user systemUser
+        on parkingInfo.parking_manager = systemUser.user_id
+        where parkingInfo.parking_admin_id = #{parkingAdminId}
+        order by state desc, parkingInfo.create_time desc
+    </select>
+
+    <!-- 根据停车场id获取停车场信息-->
+    <select id="selectParkingInfo" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.EditParkingInfoVo">
+        SELECT parkingInfo.id, parkingInfo.parking_admin_id, parkingInfo.parking_name, systemUser.user_name as parkingManagerName, parkingInfo.state, parkingInfo.parking_manager,
+        parkingInfo.address,parkingInfo.province,parkingInfo.city,parkingInfo.open_time,parkingInfo.close_time,parkingInfo.size,parkingInfo.type,
+        parkingInfo.plate_car_flag,parkingInfo.truck_flag,parkingInfo.max_place_num
+        from parking_info parkingInfo
+        inner join system_user systemUser
+        on parkingInfo.parking_manager = systemUser.user_id
+        where parkingInfo.id = #{id}
+    </select>
+
+    <!-- 筛选停车场-->
+    <select id="selectParkingResult" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.ParkingListVo">
+        SELECT parkingInfo.id, parkingInfo.parking_name, systemUser.user_name as parkingManagerName, parkingInfo.state,
+        parkingInfo.parking_manager, parkingInfo.address, systemUserAdmin.user_name as parkingCompanyName
+        from parking_info parkingInfo
+        inner join system_user systemUser
+        on parkingInfo.parking_manager = systemUser.user_id
+        inner join system_user systemUserAdmin
+        on parkingInfo.parking_admin_id = systemUserAdmin.user_id
+        inner join parking_lease_relation relation
+        on systemUserAdmin.id = relation.parking_admin_id
+        and relation.lease_id = #{leaseId}
+        where 1=1
+        <if test="province!= null and province !=''">
+            and parkingInfo.province = #{province}
+        </if>
+        <if test="state!= null and state !=''">
+            and parkingInfo.state = #{state}
+        </if>
+        order by state desc, parkingInfo.create_time desc
+    </select>
+
+    <select id="selectParkingByLeaseId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.ParkingDistanceVo">
+        SELECT parkingInfo.id, parkingInfo.lat, parkingInfo.lon, parkingInfo.address, parkingInfo.open_time,
+        parkingInfo.close_time, parkingInfo.parking_manager as phoneNum, parkingInfo.plate_car_flag, parkingInfo.truck_flag
+        from parking_info parkingInfo
+        inner join system_user systemUserAdmin
+        on parkingInfo.parking_admin_id = systemUserAdmin.user_id
+        inner join parking_lease_relation relation
+        on systemUserAdmin.id = relation.parking_admin_id
+        and relation.lease_id = #{leaseId}
+        where parkingInfo.state = '1'
+    </select>
+
+    <select id="selectParkingById" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.ParkingInfoSubVo">
+        SELECT parkingInfo.id, parkingInfo.lat, parkingInfo.lon, parkingInfo.address, parkingInfo.open_time,systemUser.user_name as contact,
+        parkingInfo.close_time, parkingInfo.parking_manager as phoneNum, parkingInfo.plate_car_flag, parkingInfo.truck_flag
+        from parking_info parkingInfo
+        inner join system_user systemUser
+        on parkingInfo.parking_manager = systemUser.user_id
+        where parkingInfo.id = #{id}
+    </select>
+
+</mapper>

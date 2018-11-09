@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.ClueInfoDao">
+    <!-- 根据用户id查询命中线索-->
+    <select id="selectByUserIdOnTarget" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.ClueVo">
+        select clue.plate , clue.app_addr as clueAddress, clue.upload_date as clueTime,clue.vehicle_identify_num,clue.type,
+        case when vehicletask.task_status!='0' then '0' else '1' end as effectiveFlag,
+        case when vehicletask.task_status!='0' then '1' else clue.check_flag end as checkFlag
+        from
+        (select clueinfo.*
+            from clue_info clueinfo
+            where clueinfo.user_id = #{userId}
+            and clueinfo.target_flag = #{targetFlag}
+            and not exists( select * from clue_info a where a.plate = clueinfo.plate and a.user_id = clueinfo.user_id and a.upload_date > clueinfo.upload_date)
+        ) clue
+        inner join vehicle_task vehicletask on vehicletask.plate = clue.plate
+        order by effectiveFlag desc,checkFlag asc , clue.upload_date desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+    <!-- 根据用户id查询非命中线索-->
+    <select id="selectByUserIdOutOfTarget" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.ClueVo">
+        select clueinfo.plate , clueinfo.app_addr as clueAddress, clueinfo.upload_date as clueTime, clueinfo.check_flag,clueinfo.vehicle_identify_num,clueinfo.type
+        from clue_info clueinfo
+        where clueinfo.user_id = #{userId}
+        and clueinfo.target_flag = #{targetFlag}
+        order by clueinfo.check_flag asc , clueinfo.upload_date desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+    <!-- 获取已命中未查看数量 -->
+    <select id="selectCountOfNotCheck" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(*)
+        from (select *
+            from clue_info clueinfo
+            where clueinfo.user_id = #{userId}
+            and clueinfo.target_flag = #{targetFlag}
+            and not exists( select * from clue_info a where a.plate = clueinfo.plate and a.user_id = clueinfo.user_id and a.upload_date > clueinfo.upload_date)) as t
+            inner join vehicle_task vehicleTask on t.plate = vehicleTask.plate and vehicleTask.task_status = '0'
+        where t.check_flag = #{checkFlag}
+    </select>
+    <!-- 获取命中某辆车的所有用户的用户id-->
+    <select id="selectByPlateAndTargetFlag" parameterType="java.lang.String" resultType="java.lang.String">
+        select distinct clueinfo.user_id as userId
+        from clue_info clueinfo
+        where clueinfo.plate = #{plate}
+        and clueinfo.target_flag = #{targetFlag}
+        order by clueinfo.upload_date desc
+    </select>
+
+    <!-- 线索扫描列表查询-->
+    <select id="findClueInfoListByPage" parameterType="cn.com.leadu.cmsxc.pojo.system.vo.ClueListParamVo" resultType="cn.com.leadu.cmsxc.pojo.system.vo.ClueListVo">
+        select DISTINCT clueinfo.plate , clueinfo.vehicle_identify_num , clueinfo.target_flag,recoveryCompany.recovery_full_name as recoveryFullName,
+        clueinfo.app_addr, DATE_FORMAT(clueinfo.upload_date,'%Y-%m-%d %H:%i:%s') as uploadDate, clueinfo.type,clueinfo.user_id
+        from clue_info clueinfo
+        left join system_user systemuser on clueinfo.user_id = systemuser.user_id
+        left join recovery_company recoveryCompany on systemUser.recovery_company_id = recoveryCompany.id
+        <if test=" role == '11' or role == '12' ">
+            left join recovery_lease_relation recoveryleaserelation on recoveryleaserelation.recovery_company_id = recoveryCompany.id
+            and recoveryleaserelation.lease_id  = #{leaseId}
+        </if>
+        where 1=1
+        <if test="clueListParamVo.plate !=null and clueListParamVo.plate!=''">
+            and (clueinfo.plate = #{clueListParamVo.plate}
+            or   clueinfo.vehicle_identify_num = #{clueListParamVo.plate})
+        </if>
+        <if test="clueListParamVo.startDate !=null and clueListParamVo.startDate!=''">
+            and DATE_FORMAT(clueinfo.upload_date ,'%Y-%m-%d')>= DATE_FORMAT(#{clueListParamVo.startDate},'%Y-%m-%d')
+        </if>
+        <if test="clueListParamVo.endDate !=null and clueListParamVo.endDate!=''">
+            and DATE_FORMAT(#{clueListParamVo.endDate},'%Y-%m-%d') >= DATE_FORMAT(clueinfo.upload_date ,'%Y-%m-%d')
+        </if>
+        <if test="clueListParamVo.recoveryCompanyId !=null and clueListParamVo.recoveryCompanyId!='' and clueListParamVo.recoveryCompanyId!='000000'">
+            and systemUser.recovery_company_id = #{clueListParamVo.recoveryCompanyId}
+        </if>
+        <if test="clueListParamVo.recoveryCompanyId !=null and clueListParamVo.recoveryCompanyId!='' and clueListParamVo.recoveryCompanyId=='000000'">
+            and systemUser.recovery_company_id is null
+        </if>
+        <if test="clueListParamVo.targetFlag !=null and clueListParamVo.targetFlag!=''">
+            and clueinfo.target_flag = #{clueListParamVo.targetFlag}
+        </if>
+        order by uploadDate desc, clueinfo.user_id desc
+    </select>
+
+</mapper>

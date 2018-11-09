@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.CommissionSettlementDao">
+
+    <!-- 佣金结算详情-->
+    <select id="selectCommissionSettlementDetail" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.CommissionSettlementDetailVo">
+        select vehicletask.id as taskId,vehicletask.plate,vehicletask.vehicle_identify_num,vehicletask.update_time as finishDate,
+        commissionsettlementinfo.flat_bed_distance,commissionsettlementinfo.flat_bed_fee,commissionsettlementinfo.key_fee,
+        commissionsettlementinfo.apply_remark,commissionsettlementinfo.status,commissionsettlementinfo.start_address,
+        commissionsettlementinfo.id as commissionSettlementInfoId,
+        case when commissionsettlementinfo.status = '02'or commissionsettlementinfo.status = '03' then commissionsettlementinfo.first_auditing_remark
+        when commissionsettlementinfo.status = '03'or commissionsettlementinfo.status = '04' then commissionsettlementinfo.last_auditing_remark end as auditingRemark
+        from vehicle_task vehicletask
+        left join commission_settlement_info commissionsettlementinfo on vehicletask.id = commissionsettlementinfo.task_id
+        where vehicletask.id = #{taskId}
+    </select>
+
+</mapper>

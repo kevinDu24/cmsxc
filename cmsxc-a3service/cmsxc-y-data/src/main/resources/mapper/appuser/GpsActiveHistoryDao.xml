@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.GpsActiveHistoryDao">
+    <!-- 根据车架号后六位查询对应的车架号集合-->
+    <select id="selectByLastSixNum" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.GpsActiveCheckVo">
+        select t1.vehicle_identify_num,t1.task_status,t1.plate
+        from  vehicle_task t1
+        where SUBSTRING(t1.vehicle_identify_num,12,6) = #{vehicleIdentifyNum}
+    </select>
+
+    <!-- 分页查询某用户的gps激活历史-->
+    <select id="selectActiveList" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.entity.GpsActiveHistory">
+        select *
+        from  gps_active_history
+        where creator = #{userId}
+        order by operate_time desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+</mapper>

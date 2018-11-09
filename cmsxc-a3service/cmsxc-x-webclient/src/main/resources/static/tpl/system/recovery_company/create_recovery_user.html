@@ -1,0 +1,56 @@
+<div class="modal-header">
+    <h4 class="modal-title">添加用户</h4>
+</div>
+<form name="form" class="form-validation">
+    <div>
+        <toaster-container toaster-options="{'position-class': 'toast-top-right', 'close-button':true}"></toaster-container>
+    </div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-3 control-label">收车公司简称:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入收车公司简称')" placeholder="请输入收车公司简称" class="form-control m-b" ng-model="recovery.shortName" required >
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">收车公司全称:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入收车公司全称')" placeholder="请输入收车公司全称" class="form-control m-b" ng-model="recovery.fullName" required >
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">联系人姓名:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入联系人姓名')"  placeholder="请输入联系人姓名"class="form-control m-b" ng-model="recovery.contactName" required >
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">联系人电话:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入联系人电话')" placeholder="请输入联系人电话" class="form-control m-b" ng-model="recovery.contactPhone" required>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">联系人地址:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入联系人地址')" class="form-control m-b" placeholder="请输入联系人地址"  ng-model="recovery.contactAddress" required >
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">联系人邮箱:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入联系人邮箱')" class="form-control m-b" placeholder="请输入联系人邮箱"  ng-model="recovery.contactEmail" ng-pattern="/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/" required >
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer ng-scope">
+        <button class="btn btn-default" ng-click="close()">取消</button>
+        <button type="submit" class="btn btn-success" ng-click="save()">添加</button>
+    </div>
+</form>

@@ -1,0 +1,85 @@
+<div class="modal-header">
+    <div class="form-group">
+        <h4 class="modal-title">组织机构详情 <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="close()">&times;</button></h4>
+    </div>
+</div>
+
+<div class="modal-body">
+    <form name="form" class="form-validation" novalidate>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">组织机构名称</b><b class="form-error">*</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysOrg.orgName}}</label>
+            </div>
+        </div>
+
+
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">上级组织机构</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysOrg.orgParentName}}</label>
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">所属组织属性</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysOrg.orgPropertyName}}</label>
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">组织机构类型</b><b class="form-error">*</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysOrg.orgTypeName}}</label>
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">组织机构编码</b><b class="form-error">*</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysOrg.orgCode}}</label>
+            </div>
+        </div>
+
+
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">组织机构状态</b><b class="form-error">*</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysOrg.orgDisable == 0 ? '启用' : '禁用'}}</label>
+            </div>
+        </div>
+
+
+
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">备注</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysOrg.orgDesc}}</label>
+            </div>
+        </div>
+
+
+    </form>
+</div>
+<div class="modal-footer ng-scope">
+    <button class="btn btn-default" ng-click="close()">关闭</button>
+</div>

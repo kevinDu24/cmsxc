@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appbusiness.dao.VehicleTaskDao">
+    <!-- 悬赏列表-->
+    <select id="selectByTaskStatusAndMore" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.VehicleTaskVo" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.RewardForVehicleVo">
+        select vehicletask.plate, concat(vehicletask.brand,' ',vehicletask.vehicle_type) as vehicleType, vehicletask.send_car_address, round(ifnull(vehicletask.service_fee,0)) as serviceFee,vehicletask.price_range,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,vehicletask.id as taskId,vehicletask.vehicle_identify_num,
+        case when tasksearchhistory.id is not null and tasksearchhistory.id <![CDATA[<> ]]> '' then '1' else '0' end as checkFlag,
+        case when vehicletaskrecovery.id is not null and vehicletaskrecovery.id <![CDATA[<> ]]> '' then '1' else '0' end as ownFlag
+        from vehicle_task  vehicletask
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletask.id = vehicletaskrecovery.task_id
+        and (
+          vehicletaskrecovery.status <![CDATA[<> ]]> '01'
+          or (vehicletaskrecovery.status = '01' and #{vehicleTaskVo.nowDate} <![CDATA[<= ]]> vehicletaskrecovery.failure_time)
+        )
+        left join vehicle_authorization vehicleauthorization
+        on vehicleauthorization.task_id = vehicletask.id
+        and (vehicleauthorization.authorization_status ='03' or vehicleauthorization.authorization_status ='05')
+        left join  vehicle_task_search_history  tasksearchhistory on tasksearchhistory.task_id = vehicletask.id and tasksearchhistory.user_id = #{userId}
+        where vehicleauthorization.id is null
+        and vehicletaskrecovery.id is null
+        and vehicletask.task_status = #{taskStatus}
+        <if test="vehicleTaskVo.clueFlag!=null and vehicleTaskVo.clueFlag!=''">
+          and vehicletask.clue_flag = #{vehicleTaskVo.clueFlag}
+        </if>
+        <if test="vehicleTaskVo.hasGpsFlag!=null and vehicleTaskVo.hasGpsFlag!=''">
+          and vehicletask.has_gps_flag = #{vehicleTaskVo.hasGpsFlag}
+        </if>
+        <if test="vehicleTaskVo.volitionFlag!=null and vehicleTaskVo.volitionFlag!=''">
+          and vehicletask.volition_flag = #{vehicleTaskVo.volitionFlag}
+        </if>
+        <if test="vehicleTaskVo.priceRange!=null and vehicleTaskVo.priceRange!=''">
+          and (vehicletask.price_range = #{vehicleTaskVo.priceRange} or vehicletask.price_range = 'x')
+        </if>
+        <if test="vehicleTaskVo.list!=null and vehicleTaskVo.list.size!=0">
+        and (
+        <foreach collection="vehicleTaskVo.list" item="item" index="index" >
+            <if test="index!=0">
+                or vehicletask.plate like  #{item}
+            </if>
+            <if test="index==0">
+               vehicletask.plate like  #{item}
+            </if>
+        </foreach>
+        )
+        </if>
+        order by vehicletask.id asc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+    <!-- 用户查询历史-->
+    <select id="selectUserSearchHistory" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.RewardForVehicleVo">
+        select distinct vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType, vehicletask.send_car_address, vehicletask.service_fee,vehicletask.price_range,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,tasksearchhistory.search_time,vehicletask.vehicle_identify_num,
+        case when vehicletask.task_status!='0' then '0' else '1' end as effectiveFlag
+        from vehicle_task_search_history tasksearchhistory
+        inner join vehicle_task vehicletask on vehicletask.id = tasksearchhistory.task_id
+        where tasksearchhistory.user_id = #{userId}
+        order by tasksearchhistory.search_time desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+
+    <!-- 查看首页车辆任务工单数量-->
+    <select id="selectCountAll" parameterType="java.util.Date" resultType="java.lang.Integer">
+        select count(*)
+        from vehicle_task vehicletask
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletask.id = vehicletaskrecovery.task_id and (vehicletaskrecovery.status <![CDATA[<> ]]> '01'
+        or (vehicletaskrecovery.status = '01' and #{nowDate} <![CDATA[<= ]]> vehicletaskrecovery.failure_time))
+        left join vehicle_authorization vehicleauthorization
+        on vehicleauthorization.task_id = vehicletask.id
+        and (vehicleauthorization.authorization_status ='03' or vehicleauthorization.authorization_status ='05')
+        where vehicleauthorization.id is null
+        and vehicletaskrecovery.id is null
+        and vehicletask.task_status = '0'
+    </select>
+
+    <!-- 获取查看过某辆车的所有用户的用户id-->
+    <select id="selectUserIdByPlate" parameterType="java.lang.String" resultType="java.lang.String">
+        select distinct tasksearchhistory.user_id as userId
+        from vehicle_task_search_history tasksearchhistory
+        left join vehicle_task vehicletask on vehicletask.id = tasksearchhistory.task_id
+        where vehicletask.plate = #{plate}
+        order by tasksearchhistory.create_time desc
+    </select>
+
+    <!-- 根据车牌号和工单状态查找授权状态不是“03：已授权，05：已完成”的任务信息-->
+    <select id="selectByPlateAndTaskStatus" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.SearchPlateVo" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.entity.VehicleTask">
+        select vehicletask.id, vehicletask.name, vehicletask.plate, round(ifnull(vehicletask.service_fee,0)) as serviceFee, vehicletask.send_car_address, vehicletask.docking_people,
+        vehicletask.vehicle_province, vehicletask.vehicle_city, vehicletask.vehicle_identify_num, vehicletask.engine_no, vehicletask.vehicle_type,
+        vehicletask.vehicle_color, vehicletask.insurance_info, vehicletask.violation_info, vehicletask.gps_system_user_name, vehicletask.gps_system_user_password,
+        vehicletask.lease_company_user_name, vehicletask.lease_company_name, vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,
+        vehicletask.price_range, vehicletask.task_status, vehicletask.manufacturer, vehicletask.brand
+        from vehicle_task vehicletask
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletask.id = vehicletaskrecovery.task_id and (vehicletaskrecovery.status <![CDATA[<> ]]> '01'
+        or (vehicletaskrecovery.status = '01' and #{vo.nowDate} <![CDATA[<= ]]> vehicletaskrecovery.failure_time))
+        left join vehicle_authorization vehicleauthorization
+        on vehicleauthorization.task_id = vehicletask.id
+        and (vehicleauthorization.authorization_status ='03' or vehicleauthorization.authorization_status ='05')
+        where (vehicletask.plate = #{vo.plate}
+        or vehicletask.vehicle_identify_num = #{vo.plate})
+        and  vehicletask.task_status = #{vo.taskStatus}
+        and vehicleauthorization.id is null
+        and vehicletaskrecovery.id is null
+    </select>
+    <select id="selectByPlateOrVehicleIdentifyNum" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.entity.VehicleTask">
+        select vehicletask.id, vehicletask.name, vehicletask.plate, round(ifnull(vehicletask.service_fee,0)) as serviceFee, vehicletask.send_car_address, vehicletask.docking_people,
+        vehicletask.vehicle_province, vehicletask.vehicle_city, vehicletask.vehicle_identify_num, vehicletask.engine_no, vehicletask.vehicle_type,
+        vehicletask.vehicle_color, vehicletask.insurance_info, vehicletask.violation_info, vehicletask.gps_system_user_name, vehicletask.gps_system_user_password,
+        vehicletask.lease_company_user_name, vehicletask.lease_company_name, vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,
+        vehicletask.price_range, vehicletask.task_status,vehicletask.brand,vehicletask.manufacturer,vehicletask.gps_online,vehicletask.id_card,vehicletask.work_address,
+        vehicletask.home_address,vehicletask.life_address,vehicletask.phone_num
+        from vehicle_task vehicletask
+        where (vehicletask.plate = #{plate}
+        or vehicletask.vehicle_identify_num = #{plate})
+        <if test=" taskStatus != null and taskStatus != ''">
+            and  vehicletask.task_status = #{taskStatus}
+        </if>
+    </select>
+
+    <!-- 根据车牌号和工单状态判定该任务是否为独家任务-->
+    <select id="selectSoleTask" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.SearchPlateVo" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.SoleTaskInfoVo">
+        select vehicletask.id as taskId,vehicletaskrecovery.id as recoveryTaskId,vehicletask.plate,vehicletask.lease_company_user_name as userId
+        from vehicle_task vehicletask
+        inner join vehicle_task_recovery vehicletaskrecovery on vehicletask.id = vehicletaskrecovery.task_id and vehicletaskrecovery.status = '01' and #{vo.nowDate} <![CDATA[< ]]> vehicletaskrecovery.failure_time
+        where (vehicletask.plate = #{vo.plate}
+        or vehicletask.vehicle_identify_num = #{vo.plate})
+        and  vehicletask.task_status = #{vo.taskStatus}
+    </select>
+
+    <!-- 根据车牌号和工单状态查找任务信息-->
+    <select id="selectVehicleInfo" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.entity.VehicleTask">
+        select vehicletask.id, vehicletask.name, vehicletask.plate, round(ifnull(vehicletask.service_fee,0)) as serviceFee, vehicletask.send_car_address, vehicletask.docking_people,
+        vehicletask.vehicle_province, vehicletask.vehicle_city, vehicletask.vehicle_identify_num, vehicletask.engine_no, vehicletask.vehicle_type,
+        vehicletask.vehicle_color, vehicletask.insurance_info, vehicletask.violation_info, vehicletask.gps_system_user_name, vehicletask.gps_system_user_password,
+        vehicletask.lease_company_user_name, vehicletask.lease_company_name, vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,
+        vehicletask.price_range, vehicletask.task_status
+        from vehicle_task vehicletask
+        where vehicletask.plate = #{plate}
+    </select>
+
+    <!-- 分页获取收车公司派单任务列表-->
+    <select id="selectRecoveryTaskList" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.RecoveryVo" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.RecoveryTaskVo">
+        select vehicletask.plate, vehicletaskrecovery.start_time, vehicletaskrecovery.failure_time, vehicletask.has_gps_flag,vehicletask.price_range,
+        vehicletask.volition_flag,vehicletask.clue_flag,concat(vehicletask.brand,' ',vehicletask.vehicle_type) as vehicleType,vehicletask.vehicle_identify_num,vehicletask.id as taskId,
+        case when #{vo.nowDate} > vehicletaskrecovery.failure_time and vehicletaskrecovery.status = '01' then '02'
+        when vehicletaskrecovery.status = '07' and auth_group_id <![CDATA[<>]]> #{vo.groupId} then '03'
+        when vehicletaskrecovery.status = '04' and finish_group_id <![CDATA[<>]]> #{vo.groupId} then '05'
+        else vehicletaskrecovery.status end as status,
+        vehicleauthorization.id as authorizationId, vehicleauthorization.operate_date as authStartDate,vehicleauthorization.authorization_out_time_date as authOutTimeDate,vehicletaskrecovery.update_time as operate_date
+        from vehicle_task_group vehicletaskgroup
+        inner join vehicle_task_recovery vehicletaskrecovery
+        on vehicletaskgroup.vehicle_task_recovery_id = vehicletaskrecovery.id
+        inner join vehicle_task vehicletask
+        on vehicletaskrecovery.task_id = vehicletask.id
+        left join vehicle_authorization vehicleauthorization on vehicleauthorization.task_id = vehicletaskrecovery.task_id  and vehicleauthorization.authorization_status = '03'
+        where vehicletaskgroup.group_id = #{vo.groupId}
+        <if test=" vo.status == 1">
+            and vehicletaskrecovery.status = '01'
+        </if>
+        <if test=" vo.status == 2 ">
+            and vehicleauthorization.authorization_status = '03'
+            and (vehicletaskrecovery.status = '03'
+            or vehicletaskrecovery.status = '07')
+        </if>
+        <if test=" vo.status == 3">
+            and (vehicletaskrecovery.status = '04'
+            or vehicletaskrecovery.status = '05'
+            or vehicletaskrecovery.status = '06')
+        </if>
+        <if test="vo.plate != null and vo.plate != ''">
+            and vehicletask.plate = #{vo.plate}
+        </if>
+        order by vehicletaskrecovery.status desc,
+                 vehicletaskrecovery.start_time asc
+        <if test="vo.page != 0 and vo.size != 0">
+            limit ${(vo.page-1)*vo.size},${vo.size}
+        </if>
+    </select>
+
+    <!-- 分页获取收车公司派单任务列表_一期老接口-->
+    <select id="selectRecoveryTaskListOld" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.RecoveryVo" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.RecoveryTaskVo">
+        select vehicletask.plate, vehicletaskrecovery.start_time, vehicletaskrecovery.failure_time, vehicletask.has_gps_flag,
+        vehicletask.volition_flag,vehicletask.clue_flag,concat(vehicletask.brand,' ',vehicletask.vehicle_type) as vehicleType,vehicletask.vehicle_identify_num,vehicletask.send_car_address,vehicletask.id as taskId,
+        case when #{vo.nowDate} > vehicletaskrecovery.failure_time and vehicletaskrecovery.status = '01' then '02' else vehicletaskrecovery.status end as status,
+        vehicleauthorization.id as authorizationId, vehicleauthorization.operate_date as authStartDate,vehicleauthorization.authorization_out_time_date as authOutTimeDate,vehicletaskrecovery.update_time as operate_date
+        from vehicle_task_recovery vehicletaskrecovery
+        left join vehicle_task vehicletask
+        on vehicletaskrecovery.task_id = vehicletask.id
+        left join vehicle_authorization vehicleauthorization on vehicleauthorization.task_id = vehicletaskrecovery.task_id  and vehicleauthorization.authorization_status = '03'
+        where vehicletaskrecovery.recovery_company_id = #{vo.recoveryCompanyId}
+        <if test=" vo.status == 1">
+            and vehicletaskrecovery.status = '01'
+        </if>
+        <if test=" vo.status == 2 ">
+            and vehicleauthorization.authorization_status = '03'
+            and (vehicletaskrecovery.status = '03'
+            or vehicletaskrecovery.status = '07')
+        </if>
+        <if test=" vo.status == 3">
+            and (vehicletaskrecovery.status = '04'
+            or vehicletaskrecovery.status = '05'
+            or vehicletaskrecovery.status = '06')
+        </if>
+        <if test="vo.plate != null and vo.plate != ''">
+            and vehicletask.plate = #{vo.plate}
+        </if>
+        order by vehicletaskrecovery.status desc,
+        vehicletaskrecovery.start_time asc
+        <if test="vo.page != 0 and vo.size != 0">
+            limit ${(vo.page-1)*vo.size},${vo.size}
+        </if>
+    </select>
+
+    <!-- 分页获取派单管理列表-->
+    <select id="selectTaskManagerList" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.RecoveryVo" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.RecoveryTaskManagerVo">
+        select vehicletask.plate, vehicletaskrecovery.start_time, vehicletaskrecovery.failure_time, vehicletask.has_gps_flag,round(ifnull(vehicletask.service_fee,0)) as serviceFee,
+        vehicletask.volition_flag,vehicletask.clue_flag,concat(vehicletask.brand,' ',vehicletask.vehicle_type) as vehicleType,vehicletask.vehicle_identify_num,vehicletask.send_car_address,vehicletask.id as taskId,
+        case when #{vo.nowDate} > vehicletaskrecovery.failure_time and vehicletaskrecovery.status = '01' then '02' else vehicletaskrecovery.status end as status,
+        vehicleauthorization.id as authorizationId, vehicleauthorization.operate_date as authStartDate,vehicleauthorization.authorization_out_time_date as authOutTimeDate,vehicletaskrecovery.update_time as operate_date,
+        leaseCompany.lease_full_name,recoveryGroup.group_name,vehicletaskrecovery.assign_date,recoveryGroup.id as groupId,
+        case when (vehicletaskrecovery.assignment_flag = '1' or vehicletaskrecovery.status in ('04','05','06')) then '1' else '0' end as assignmentFlag
+        from vehicle_task_recovery vehicletaskrecovery
+        inner join vehicle_task vehicletask
+        on vehicletaskrecovery.task_id = vehicletask.id
+        left join vehicle_task_group vehicleTaskGroup
+        on vehicletaskrecovery.id = vehicleTaskGroup.vehicle_task_recovery_id
+        left join recovery_group recoveryGroup
+        on vehicleTaskGroup.group_id = recoveryGroup.id
+        inner join system_user systemUser
+        on vehicletask.lease_company_user_name = systemUser.user_id
+        inner join lease_company leaseCompany
+        on systemUser.lease_id = leaseCompany.id
+        left join vehicle_authorization vehicleauthorization on vehicleauthorization.task_id = vehicletaskrecovery.task_id  and vehicleauthorization.authorization_status = '03'
+        where vehicletaskrecovery.recovery_company_id = #{vo.recoveryCompanyId}
+        <if test="vo.plate != null and vo.plate != ''">
+            and vehicletask.plate = #{vo.plate}
+        </if>
+        <if test=" vo.status == 1">
+            and vehicletaskrecovery.assignment_flag = '0'
+            and vehicletaskrecovery.status not in ('04','05','06')
+        </if>
+        <if test=" vo.status == 2">
+            and (vehicletaskrecovery.assignment_flag = '1' or vehicletaskrecovery.status in ('04','05','06'))
+        </if>
+        order by vehicletaskrecovery.start_time desc
+        <if test="vo.page != 0 and vo.size != 0">
+            limit ${(vo.page-1)*vo.size},${vo.size}
+        </if>
+    </select>
+
+    <!-- 派单任务总量及总服务费-->
+    <select id="selectSelfFinish" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.DataStatisticsParamVo" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.DataStatisticsSubVo">
+        select count(1) as sumCount, sum(vehicletask.service_fee) as sumFee
+        from vehicle_task_recovery vehicletaskrecovery
+        inner join vehicle_task vehicletask on vehicletask.id = vehicletaskrecovery.task_id
+        inner join system_user systemuser on systemuser.user_id = vehicletask.lease_company_user_name
+        left join recovery_group recoverygroup on recoverygroup.id = vehicletaskrecovery.finish_group_id
+        where vehicletaskrecovery.recovery_company_id = #{recoveryCompanyId}
+        and vehicletaskrecovery.status = '04'
+        <if test="statisticsVo.selectDate!= null and statisticsVo.selectDate != ''">
+          and DATE_FORMAT(vehicletask.update_time,'%Y-%m') = DATE_FORMAT(#{statisticsVo.selectDate},'%Y-%m')
+        </if>
+
+    </select>
+
+    <!-- 取在授权表中不在派单表中的自己公司业务员完成的任务总量及总服务费-->
+    <select id="selectOthersFinish" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.DataStatisticsParamVo" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.DataStatisticsSubVo">
+        select count(1) as sumCount, sum(vehicletask.service_fee) as sumFee
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask on vehicletask.id = vehicleauthorization.task_id
+        inner join system_user systemuser on systemuser.user_id = vehicletask.lease_company_user_name
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletaskrecovery.task_id = vehicletask.id
+        left join recovery_group recoverygroup on recoverygroup.id = vehicletaskrecovery.finish_group_id
+        where vehicleauthorization.authorization_status = '05'
+        and vehicleauthorization.user_id in
+        <foreach collection="statisticsVo.users" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and (vehicletaskrecovery.recovery_company_id != #{recoveryCompanyId}
+        or   vehicletaskrecovery.recovery_company_id is null)
+        <if test="statisticsVo.selectDate!= null and statisticsVo.selectDate != ''">
+            and DATE_FORMAT(vehicletask.update_time,'%Y-%m') = DATE_FORMAT(#{statisticsVo.selectDate},'%Y-%m')
+        </if>
+    </select>
+    <!-- 派单任务及悬赏总量及总服务费  -  小组 （弃用）-->
+    <select id="selectGroupFinishOld" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.DataStatisticsParamVo" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.DataStatisticsSubVo">
+        select sum(temp.sumCount) as sumCount, sum(temp.sumFee) as sumFee, temp.groupName
+        from(
+        select count(1) as sumCount, sum(vehicletask.service_fee) as sumFee,
+        case when recoverygroup.id  is null then '其他'
+        else recoverygroup.group_name end as groupName
+        from vehicle_task_recovery vehicletaskrecovery
+        inner join vehicle_task vehicletask on vehicletask.id = vehicletaskrecovery.task_id
+        inner join system_user systemuser on systemuser.user_id = vehicletask.lease_company_user_name
+        left join recovery_group recoverygroup on recoverygroup.id = vehicletaskrecovery.finish_group_id
+        and recoverygroup.recovery_company_id = #{recoveryCompanyId}
+        where vehicletaskrecovery.recovery_company_id = #{recoveryCompanyId}
+        and vehicletaskrecovery.status = '04'
+        and DATE_FORMAT(vehicletask.update_time,'%Y-%m') = DATE_FORMAT(#{statisticsVo.selectDate},'%Y-%m')
+        group by groupName
+        union all
+        select count(1) as sumCount, sum(vehicletask.service_fee) as sumFee,
+        case when recoverygroup.id is null then '其他'
+        else recoverygroup.group_name end as groupName
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask on vehicletask.id = vehicleauthorization.task_id
+        inner join system_user systemuser on systemuser.user_id = vehicletask.lease_company_user_name
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletaskrecovery.task_id = vehicletask.id
+        left join recovery_group recoverygroup on recoverygroup.id = vehicletaskrecovery.finish_group_id
+        where vehicleauthorization.authorization_status = '05'
+        and vehicleauthorization.user_id in
+        <foreach collection="statisticsVo.users" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and (vehicletaskrecovery.recovery_company_id != #{recoveryCompanyId}
+        or vehicletaskrecovery.recovery_company_id is null)
+        and DATE_FORMAT(vehicletask.update_time,'%Y-%m') = DATE_FORMAT(#{statisticsVo.selectDate},'%Y-%m')
+        group by groupName
+        )temp
+        group by groupName
+    </select>
+    <!-- 派单任务及悬赏总量及总服务费  -  小组 -->
+    <select id="selectGroupFinish" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.DataStatisticsParamVo" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.DataStatisticsSubVo">
+        select count(1) as sumCount, sum(monthdatainfo.service_fee) as sumFee,
+        case when monthdatainfo.group_id  is null then '其他'
+        else monthdatainfo.group_name end as groupName
+        from month_data_info monthdatainfo
+        where
+        monthdatainfo.recovery_company_id = #{recoveryCompanyId}
+        and DATE_FORMAT(monthdatainfo.finish_date,'%Y-%m') = DATE_FORMAT(#{statisticsVo.selectDate},'%Y-%m')
+        group by groupName
+        order by sumCount desc
+    </select>
+
+    <!-- 获取收车公司任务表中各种状态的任务数量-->
+    <select id="selectCountByStatus" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.HomePageStatisticsSubVo">
+        select status, count(1) as sumCount
+        from vehicle_task_recovery vehicletaskrecovery
+        where vehicletaskrecovery.recovery_company_id = #{recoveryCompanyId}
+        group by status
+    </select>
+
+    <!-- 根据车架号更新gps账号和密码-->
+    <select id="updateByVehicleIdentifyNum" parameterType="java.lang.String">
+        update vehicle_task
+        set gps_system_user_name = #{gpsSystemUserName},
+        gps_system_user_password = #{gpsSystemUserPassword}
+        where vehicle_identify_num = #{vehicleIdentifyNum}
+    </select>
+
+    <!-- 查询最近10条工单完成信息-->
+    <select id="selectFinishInfo" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.FinishTaskVo">
+        select plate, ROUND(service_fee) as serviceFee
+        from vehicle_task
+        where task_status = '1'
+        order by update_time
+        limit 10
+    </select>
+    <!-- 更新任务分配flag为未分配-->
+    <update id="updateAssignmentFlag" parameterType="java.util.List">
+        update vehicle_task_recovery set assignment_flag = '0' ,assign_date = null,update_time = now() where id in
+        <foreach collection="vehicleTaskRecoveryIdList" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!-- 更新完成小组id-->
+    <update id="updateFinishGroupId" parameterType="java.util.List">
+        update vehicle_task_recovery set finish_group_id = #{groupId} ,update_time = now() where task_id in
+        <foreach collection="finishTaskIds" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!-- 更新授权小组id-->
+    <update id="updateAuthorizationGroupId" parameterType="java.util.List">
+        update vehicle_task_recovery set auth_group_id = #{groupId},update_time = now() where task_id in
+        <foreach collection="authoTaskIds" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!-- 根据小组id清空授权小组id-->
+    <update id="updateAuthGroupIdNull" parameterType="java.lang.String">
+        update vehicle_task_recovery set auth_group_id = null,update_time = now()
+        where  auth_group_id = #{groupId}
+    </update>
+    <!-- 根据小组id清空授权小组id和完成小组id-->
+    <update id="updateFinishGroupIdNull" parameterType="java.lang.String">
+        update vehicle_task_recovery set  finish_group_id = null,update_time = now()
+        where finish_group_id = #{groupId}
+    </update>
+
+    <!-- 赏金三期更新工单表历史数据三址、fp所在省份 -->
+    <update id="updateHistoryData">
+        update vehicle_task vehicleTask,vehicle_data_temp temp
+        set vehicleTask.id_card = temp.id_card,
+        vehicleTask.phone_num = temp.phone_num,
+        vehicleTask.work_address = temp.work_address,
+        vehicleTask.home_address = temp.home_address,
+        vehicleTask.life_address = temp.life_address,
+        vehicleTask.fp_province = temp.fp_province
+        where vehicleTask.vehicle_identify_num = temp.vehicle_identify_num
+    </update>
+
+</mapper>

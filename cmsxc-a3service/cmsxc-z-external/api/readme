@@ -1,0 +1,2 @@
+/api/keystore.p12文件是https的ssl证书，在本地启动cmsxc-z-external项目时
+需要将在项目所在根目录下新建一个ssl文件夹，然后将keystore.p12复制到该文件夹下

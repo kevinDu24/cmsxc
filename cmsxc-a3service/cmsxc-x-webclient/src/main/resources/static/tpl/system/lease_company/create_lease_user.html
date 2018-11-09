@@ -1,0 +1,64 @@
+<div class="modal-header">
+    <h4 class="modal-title">添加用户</h4>
+</div>
+<form name="form" class="form-validation">
+    <div>
+        <toaster-container toaster-options="{'position-class': 'toast-top-right', 'close-button':true}"></toaster-container>
+    </div>
+    <div class="panel-body">
+        <div class="form-group">
+            <label class="col-sm-3 control-label">用户名:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入用户名')" class="form-control m-b" placeholder="请输入用户名"  ng-model="Lease.name" required >
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">密码:</label>
+            <div class="col-sm-9">
+                <input type="password" oninvalid="setCustomValidity('请输入密码')"  placeholder="请输入密码"class="form-control m-b" name="password" ng-model="Lease.password"  ng-minlength="6"
+                       ng-maxlength="20"  required >
+                <span class="form-error" ng-show="form.password.$error.minlength">密码长度不小于6</span>
+                <span class="form-error" ng-show="form.password.$error.maxlength">密码长度不超过20</span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">确认密码:</label>
+            <div class="col-sm-9">
+                <input type="password" oninvalid="setCustomValidity('两次密码输入不一致')" placeholder="请确认密码" class="form-control m-b" name="confirm_password" required ng-model="confirm_password" ui-validate=" '$value==Lease.password' " ui-validate-watch=" 'Lease.password' ">
+                <!--<span class="help-inline">Please correct the error</span>-->
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label">委托公司简称:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入委托公司简称')" placeholder="请输入委托公司简称" class="form-control m-b" ng-model="Lease.shortName" required >
+            </div>
+        </div>
+        <!--<div class="line line-dashed b-b line-lg pull-in"></div>-->
+        <div class="form-group">
+            <label class="col-sm-3 control-label">委托公司全称:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入委托公司全称')" placeholder="请输入委托公司全称" class="form-control m-b" ng-model="Lease.fullName" required >
+            </div>
+        </div>
+        <!--<div class="line line-dashed b-b line-lg pull-in"></div>-->
+        <div class="form-group">
+            <label class="col-sm-3 control-label">联系人姓名:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入联系人姓名')"  placeholder="请输入联系人姓名"class="form-control m-b" ng-model="Lease.contactName" required >
+            </div>
+        </div>
+        <!--<div class="line line-dashed b-b line-lg pull-in"></div>-->
+        <div class="form-group">
+            <label class="col-sm-3 control-label">联系人电话:</label>
+            <div class="col-sm-9">
+                <input type="text" oninvalid="setCustomValidity('请输入联系人电话')" placeholder="请输入联系人电话" class="form-control m-b" ng-model="Lease.contactPhone" ng-pattern="/^[1][3,4,5,7,8][0-9]{9}$/" required>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer ng-scope">
+        <button class="btn btn-default" ng-click="close()">取消</button>
+        <button type="submit" class="btn btn-success" ng-click="save()">添加</button>
+    </div>
+</form>

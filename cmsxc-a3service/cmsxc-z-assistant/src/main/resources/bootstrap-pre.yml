@@ -1,0 +1,18 @@
+eureka:
+  instance:
+    statusPageUrlPath: /info
+    healthCheckUrlPath: /health
+    prefer-ip-address: true
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+spring:
+  cloud:
+    config:
+      name: cmsxc
+      profile: g-common-${spring.profiles.active},z-assistant-${spring.profiles.active}
+      discovery:
+        enabled: true
+        service-id: cmsxc-b-config
+

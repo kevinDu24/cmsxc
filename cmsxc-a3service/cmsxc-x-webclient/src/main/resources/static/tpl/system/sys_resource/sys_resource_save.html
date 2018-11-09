@@ -1,0 +1,97 @@
+<div class="modal-header">
+    <h3 class="modal-title">添加菜单</h3>
+</div>
+<div class="modal-body">
+    <form name="form" class="form-validation" novalidate>
+
+        <div class="panel-body">
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">菜单英文名称</b><b class="form-error">*</b>:</label>
+                <div class="col-sm-9">
+                    <input type="text" name="name" placeholder="请输入菜单英文名称" class="form-control m-b-xs" ng-model="sysRes.name"  required >
+                    <p>
+                        <span class="form-info" ng-show=" (form.name.$dirty && form.name.$error.required) || (form.name.$error.required && formValidate)">菜单英文名称不能为空</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">菜单中文名称</b><b class="form-error">*</b>:</label>
+                <div class="col-sm-9">
+                    <input type="text" name="description" placeholder="请输入菜单中文名称" class="form-control m-b-xs" ng-model="sysRes.description" required >
+                    <p>
+                        <span class="form-info" ng-show=" (form.description.$dirty && form.description.$error.required) || (form.description.$error.required && formValidate)">菜单中文名称不能为空</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">资源路径</b><b class="form-error">*</b>:</label>
+                <div class="col-sm-9">
+                    <input type="text" name="res" placeholder="请输入资源路径" class="form-control m-b-xs" ng-model="sysRes.res" required >
+                    <p>
+                        <span class="form-info" ng-show=" (form.res.$dirty && form.res.$error.required) || (form.res.$error.required && formValidate)">资源路径不能为空</span>
+                    </p>
+                </div>
+            </div>
+
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">类型</b>:</label>
+                <div class="col-sm-9">
+                    <select ng-model="sysRes.type" class="form-control m-b-xs" ng-change="typeChange()">
+                        <option selected value="0">后台菜单</option>
+                        <option value="1">接口资源</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">菜单级别</b>:</label>
+                <div class="col-sm-9">
+                    <select ng-model="sysRes.resLevel" class="form-control m-b-xs" ng-change="resLevelChange()">
+                        <option ng-repeat="resLevelData in resLevelDatas" value="{{resLevelData.id}}">{{resLevelData.description}}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">父级菜单</b>:</label>
+                <div class="col-sm-9">
+                    <select ng-model="sysRes.parentId" class="form-control m-b-xs">
+                        <option value="">{{parentIdInfo}}</option>
+                        <option ng-repeat="sysResParent in sysResParents" value="{{sysResParent.id}}">{{sysResParent.description}}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">排序</b><b class="form-error">*</b>:</label>
+                <div class="col-sm-9">
+                    <input type="text" name="sort" placeholder="请输入排序" class="form-control m-b-xs" ng-model="sysRes.sort" ng-pattern="/^\d+$/" required >
+                    <p>
+                        <span class="form-info" ng-show=" (form.sort.$dirty && form.sort.$error.required) || (form.sort.$error.required && formValidate)">排序不能为空</span>
+                        <span class="form-info" ng-show=" (form.sort.$error.pattern && !form.sort.$error.required) || (form.sort.$error.pattern && formValidate && !form.sort.$error.required)">请填写正确的数字类型</span>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+<div class="modal-footer ng-scope">
+    <button class="btn btn-default" ng-click="close()">取消</button>
+    <button type="submit" class="btn btn-success" ng-disabled="submit" ng-click="save()">新增</button>
+</div>

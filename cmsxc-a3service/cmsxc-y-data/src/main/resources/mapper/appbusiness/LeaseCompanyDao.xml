@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appbusiness.dao.LeaseCompanyDao">
+    <!-- 根据委托公司简称或用户名获取委托公司信息-->
+    <select id="selectLeaseCompany" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.entity.LeaseCompany">
+        select leasecompany.name, leasecompany.lease_short_name, leasecompany.lease_full_name, leasecompany.contact_name, leasecompany.contact_phone
+        from lease_company leasecompany
+        where 1=1
+        <if test="fullName!=null and fullName!=''">
+            and leasecompany.lease_full_name = #{fullName}
+        </if>
+        <if test="shortName!=null and shortName!=''">
+            and leasecompany.lease_short_name = #{shortName}
+        </if>
+        order by leasecompany.create_time desc
+    </select>
+    <!-- 根据收车公司id获取合作的委托公司信息-->
+    <select id="selectLeaseCompanysByRecoveryCompanyId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.LeaseCompanysVo">
+        select leasecompany.id as leaseCompanyId, leasecompany.lease_full_name as leaseFullName
+        from lease_company leasecompany
+        inner join recovery_lease_relation recoveryleaserelation on leasecompany.id = recoveryleaserelation.lease_id
+        where recoveryleaserelation.recovery_company_id = #{recoveryCompanyId}
+    </select>
+
+</mapper>

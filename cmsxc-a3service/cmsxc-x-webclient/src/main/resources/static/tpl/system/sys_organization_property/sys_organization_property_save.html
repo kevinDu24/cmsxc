@@ -1,0 +1,45 @@
+<div class="modal-header">
+    <h4 class="modal-title">添加组织机构属性 <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="close()">&times;</button></h4>
+</div>
+<div class="modal-body">
+    <form name="form" class="form-validation" novalidate>
+
+        <div class="panel-body">
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">组织机构属性名称</b><b class="form-error">*</b>:</label>
+                <div class="col-sm-9">
+                    <input type="text" name="orgPropertyName" placeholder="请输入组织机构属性名称" class="form-control m-b-xs" ng-model="sysOrgPro.orgPropertyName"  required >
+                    <p>
+                        <span class="form-info" ng-show=" (form.orgPropertyName.$dirty && form.orgPropertyName.$error.required) || (form.orgPropertyName.$error.required && formValidate)">组织机构属性名称不能为空</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">组织机构属性编码</b><b class="form-error">*</b>:</label>
+                <div class="col-sm-9">
+                    <input type="text" name="orgPropertyCode" placeholder="请输入组织机构属性编码" class="form-control m-b-xs" ng-model="sysOrgPro.orgPropertyCode" required >
+                    <p>
+                        <span class="form-info" ng-show=" (form.orgPropertyCode.$dirty && form.orgPropertyCode.$error.required) || (form.orgPropertyCode.$error.required && formValidate)">组织机构属性编码不能为空</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="line line-dashed b-b line-lg pull-in"></div>
+
+            <div class="form-group">
+                <label class="col-sm-3 control-label text-right"><b class="form-text-black">备注</b>:</label>
+                <div class="col-sm-9">
+                    <input type="text" name="orgDesc" placeholder="请输入备注" class="form-control m-b-xs" ng-model="sysOrgPro.orgDesc" >
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+<div class="modal-footer ng-scope">
+    <button class="btn btn-default" ng-click="close()">取消</button>
+    <button type="submit" class="btn btn-success" ng-disabled="submit" ng-click="save()">新增</button>
+</div>

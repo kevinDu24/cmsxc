@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: ${leadu-profiles-active:dev}
+  application:
+    name: cmsxc-x-webclient
+
+management:
+  security:
+    enabled: false

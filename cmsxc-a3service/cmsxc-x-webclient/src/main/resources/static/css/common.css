@@ -1,0 +1,51 @@
+.control-label{
+    margin-top: 8px;
+}
+
+.form-info {
+    color: #2f96b4;
+    font-size: 12px;
+}
+
+.form-error {
+    color: red;
+}
+
+.form-text-black{
+    color: black;
+}
+
+.help-block,
+.help-inline {
+    color: #595959;
+}
+
+.help-inline {
+    display: inline-block;
+    *display: inline;
+    padding-left: 5px;
+    vertical-align: middle;
+    *zoom: 1;
+    color: #b94a48;
+}
+
+table {
+    max-width: none !important;
+}
+
+table td{word-break: keep-all;white-space:nowrap;}
+table th{word-break: keep-all;white-space:nowrap;}
+
+
+
+.leadu-header-menu-header{
+    color:#999;
+    background-color:#f0f0f0;
+    font-size: 12px;
+}
+
+.leadu-header-menu-body{
+    color:#373D41;
+    background:#f5f5f6;
+    font-size: 12px;
+}

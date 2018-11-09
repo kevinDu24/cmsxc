@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.MonthDataInfoDao">
+
+    <!-- 每月1号查询上个月需要存放到月度数据表中的数据-->
+    <insert id="insertMonthData">
+        insert into
+        month_data_info(
+        id,
+        task_id,
+        service_fee,
+        finish_date,
+        group_id,
+        recovery_company_id,
+        group_name,
+        recovery_company_name,
+        create_date
+        )
+        select
+            temp.id,
+            temp.taskId,
+            temp.serviceFee,
+            temp.finishDate,
+            temp.groupId,
+            temp.recoveryCompanyId,
+            recoveryGroup.group_name,
+            recoveryCompany.recovery_full_name,
+            NOW()
+        from
+        (
+            select
+                UUID() as id,
+                vehicleTask.id as taskId,
+                vehicleTask.service_fee as serviceFee,
+                vehicleTask.update_time as finishDate,
+                case when vehicleAuthorization.user_id is not null and recoveryGroupUser.recovery_group_id is null then null
+                when vehicleAuthorization.user_id is not null and recoveryGroupUser.recovery_group_id is not null then recoveryGroupUser.recovery_group_id
+                when vehicleAuthorization.user_id is null and vehicleTaskGroup.id is null then null
+                when vehicleAuthorization.user_id is null and vehicleTaskGroup.id is not null then vehicleTaskGroup.group_id end as groupId,
+                case when vehicleAuthorization.user_id is not null then systemUser.recovery_company_id else vehicleTaskRecovery.recovery_company_id end as recoveryCompanyId
+            from
+                vehicle_task vehicleTask
+            left join vehicle_task_recovery vehicleTaskRecovery ON vehicleTask.id = vehicleTaskRecovery.task_id
+            left join vehicle_task_group vehicleTaskGroup on vehicleTaskRecovery.id = vehicleTaskGroup.vehicle_task_recovery_id
+            left join vehicle_authorization vehicleAuthorization ON vehicleTask.id = vehicleAuthorization.task_id
+            and vehicleAuthorization.authorization_status = '05'
+            left join recovery_group_user recoveryGroupUser on vehicleAuthorization.user_id = recoveryGroupUser.group_user_id
+            left join system_user systemUser on vehicleAuthorization.user_id = systemUser.user_id
+
+            where
+                DATE_FORMAT(vehicleTask.update_time, '%Y-%m') = DATE_FORMAT(DATE_ADD(NOW(),INTERVAL -1 DAY), '%Y-%m')
+            and vehicleTask.task_status = '1'
+            and (vehicleTaskRecovery.id is not null or vehicleAuthorization.id is not null)
+        ) as temp
+        left join recovery_group recoveryGroup on temp.groupId = recoveryGroup.id
+        left join recovery_company recoveryCompany on temp.recoveryCompanyId = recoveryCompany.id
+    </insert>
+
+</mapper>

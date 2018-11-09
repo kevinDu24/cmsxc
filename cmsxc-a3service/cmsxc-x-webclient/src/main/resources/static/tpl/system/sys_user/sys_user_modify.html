@@ -1,0 +1,94 @@
+<div class="modal-header">
+    <h4 class="modal-title">用户修改 <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="close()">&times;</button></h4>
+</div>
+<div class="panel-body">
+    <form name="form" class="form-validation" novalidate>
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">用户账号</b><b class="form-error">*</b>:</label>
+            <div class="col-sm-9">
+                <input type="text" name="username" placeholder="请输入用户账号(必填)" class="form-control m-b-xs" ng-model="sysUser.userName" required >
+                <p>
+                    <span class="form-info" ng-show=" (form.username.$dirty && form.username.$error.required) || (form.username.$error.required && formValidate)">用户账号不能为空</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">用户姓名</b><b class="form-error">*</b>:</label>
+            <div class="col-lg-9">
+                <input type="text" name="realName" placeholder="请输入用户姓名(必填)" class="form-control m-b-xs" ng-model="sysUser.realName" required >
+                <p>
+                    <span class="form-info" ng-show=" (form.realName.$dirty && form.realName.$error.required) || (form.realName.$error.required && formValidate)">用户姓名不能为空</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">用户手机号码</b><b class="form-error">*</b>:</label>
+            <div class="col-lg-9">
+                <input name="phone" type="text" class="form-control m-b-xs" placeholder="请输入用户手机号码(必填)" ng-model="sysUser.phone" ng-pattern="/^1[345789]\d{9}$/" required >
+                <p>
+                    <span class="form-info" ng-show=" (form.phone.$dirty && form.phone.$error.required) || (form.phone.$error.required && formValidate)">手机号码不能为空</span>
+                    <span class="form-info" ng-show=" (form.phone.$error.pattern && !form.phone.$error.required) || (form.phone.$error.pattern && formValidate && !form.phone.$error.required)">请输入正确的手机号</span>
+                </p>
+            </div>
+        </div>
+
+
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-3 m-b text-right"><b class="form-text-black">性别</b><b class="form-error">*</b>:</label>
+            <div class="col-sm-9">
+                <label class="i-checks i-checks-sm">
+                    <input type="radio" ng-model="sysUser.gender" value="0" name="gender">
+                    <i></i>
+                    男
+                </label>
+
+                <label class="i-checks i-checks-sm">
+                    <input type="radio" ng-model="sysUser.gender" value="1" name="gender">
+                    <i></i>
+                    女
+                </label>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">出生日期</b>:</label>
+            <div class="col-sm-9">
+                <input type="text" name="birthday" placeholder="请选择出生日期" class="form-control m-b-xs" ng-model="sysUser.birthday" onClick="WdatePicker({dateFmt:'yyyy-MM-dd',skin:'twoer'})"  >
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">座机</b>:</label>
+            <div class="col-sm-9">
+                <input type="text" name="landLine" placeholder="请输入座机" class="form-control m-b-xs" ng-model="sysUser.landLine" ng-pattern="/^0\d{2,3}-\d{7,8}$/"  >
+                <p>
+                    <span class="form-info" ng-show=" (form.landLine.$dirty && form.landLine.$error.pattern) || (form.landLine.$error.pattern && formValidate)">请输入正确的座机号码</span>
+                </p>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-lg pull-in"></div>
+        <div class="form-group">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">Email</b>:</label>
+            <div class="col-sm-9">
+                <input type="text" name="email" placeholder="请输入Email" class="form-control m-b-xs" ng-model="sysUser.email" ng-pattern="/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/" >
+                <p>
+                    <span class="form-info" ng-show=" (form.email.$dirty && form.email.$error.pattern) || ( form.email.$error.pattern && formValidate)">请输入正确的邮箱</span>
+                </p>
+            </div>
+        </div>
+
+
+
+    </form>
+</div>
+<div class="modal-footer ng-scope">
+    <button class="btn btn-default" ng-click="close()">取消</button>
+    <button type="submit" class="btn btn-success" ng-disabled="submit" ng-click="modify()">保存</button>
+</div>

@@ -1,0 +1,45 @@
+package cn.com.leadu.cmsxc.pojo.appbusiness.entity;
+
+import cn.com.leadu.cmsxc.common.entity.BaseEntity;
+import cn.com.leadu.cmsxc.common.tkmapper.IdGenerator;
+import lombok.Data;
+
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+/**
+ * Created by yuanzhenxia on 2018/1/16.
+ *
+ * 收车公司
+ */
+@Data
+public class RecoveryCompany extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY,generator = IdGenerator.ID_GENERATOR)
+    private String id;
+
+    private String recoveryShortName;// 收车公司简称
+
+    private String recoveryFullName;// 收车公司全称
+
+    private String contactName;// 联系人姓名
+
+    private String contactPhone;// 联系人电话
+
+    private String contactAddress;// 联系人地址
+
+    private String contactEmail;// 联系人邮箱
+
+    private String managerRegisterCode;// 主管注册码
+
+    private String salesmanRegisterCode;// 业务员注册码
+
+    private String bossRegisterCode;// 老板注册码
+
+    private String leaseId; //委托公司id
+
+    private String recoveryCompanyId;//主系统收车公司id
+
+
+}

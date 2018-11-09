@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.MessageCenterDao">
+    <!-- 查询消息中心列表-->
+    <select id="selectMessageList" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.entity.MessageCenter">
+        select *
+        from message_center messageCenter
+        where messageCenter.receiver = #{userId}
+        <if test=" type != null and type != ''">
+            and messageCenter.type = #{type}
+        </if>
+        and messageCenter.delete_flag = '0'
+        order by messageCenter.is_readed asc , messageCenter.push_date desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+
+    <select id="updateMessageList" parameterType="java.lang.String">
+        update message_center
+        set is_readed = '1',
+        read_date = NOW()
+        where receiver = #{userId}
+        <if test=" type != null and type != ''">
+            and type = #{type}
+        </if>
+    </select>
+
+    <!-- 获取委托公司一级管理员信息(含消息推送)-->
+    <select id="selectByLeaseAdminUserId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appbusiness.vo.GroupUserClientVo">
+        select systemUser.user_id as userId,systemUser.user_phone as userPhone,userDeviceInfo.device_token,userDeviceInfo.client
+        from system_user systemUser
+        left join user_device_info userDeviceInfo on systemUser.user_id = userDeviceInfo.user_id
+        where systemUser.user_id = #{userId}
+        and systemUser.user_role = '11' order by systemUser.create_time desc limit 1
+    </select>
+
+</mapper>

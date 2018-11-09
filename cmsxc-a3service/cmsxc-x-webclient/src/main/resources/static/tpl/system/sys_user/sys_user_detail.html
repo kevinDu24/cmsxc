@@ -1,0 +1,77 @@
+<div class="modal-header">
+    <div class="form-group">
+        <h4 class="modal-title">用户详情 <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="close()">&times;</button></h4>
+    </div>
+</div>
+<div class="modal-body">
+    <form name="form" class="form-validation" novalidate>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">用户账号</b><b class="form-error">*</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysUser.username}}</label>
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">用户姓名</b><b class="form-error">*</b>:</label>
+            <div class="col-lg-9">
+                <label class="col-sm-12 control-label text-left">{{sysUser.realName}}</label>
+            </div>
+        </div>
+
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">用户手机号码</b><b class="form-error">*</b>:</label>
+            <div class="col-lg-9">
+                <label class="col-sm-12 control-label text-left">{{sysUser.phone}}</label>
+            </div>
+        </div>
+
+
+
+
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">性别</b><b class="form-error">*</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysUser.gender == 0 ? '男' : '女'}}</label>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">出生日期</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysUser.birthday}}</label>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">座机</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysUser.landLine}}</label>
+            </div>
+        </div>
+        <div class="line line-dashed b-b line-xs pull-in"></div>
+
+        <div class="form-group row">
+            <label class="col-sm-3 control-label text-right"><b class="form-text-black">Email</b>:</label>
+            <div class="col-sm-9">
+                <label class="col-sm-12 control-label text-left">{{sysUser.email}}</label>
+            </div>
+        </div>
+
+
+
+
+    </form>
+</div>
+<div class="modal-footer ng-scope">
+    <button class="btn btn-default" ng-click="close()">关闭</button>
+</div>

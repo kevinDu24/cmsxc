@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: ${leadu-profiles-active:prod}
+  application:
+    name: cmsxc-z-system
+
+management:
+  security:
+    enabled: false

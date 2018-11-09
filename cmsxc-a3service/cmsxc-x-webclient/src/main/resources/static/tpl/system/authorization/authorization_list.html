@@ -1,0 +1,52 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h4">任务授权列表</h1>
+</div>
+<div class="wrapper-md" style="padding-bottom: 0;" ng-controller="authorization_list_controller">
+    <div>
+        <toaster-container toaster-options="{'position-class': 'toast-top-right', 'close-button':true}"></toaster-container>
+    </div>
+    <div class="panel panel-default" style="margin-bottom: 0;">
+        <div class="wrapper-sm" style="padding-left: 15px;padding-bottom: 0;">
+            <div class="row">
+                <div class="col-lg-12">
+                    <button class="{{class}}" ng-disabled="isDisable" ng-click='onClickAuthorization()'>授权</button>
+                    <button class="{{class}}" ng-disabled="isDisable" ng-click='onClickRefuse()'>拒绝</button>
+                    <button class="{{classDelay}}" ng-disabled="isDisableDelay" ng-click='onClickDelay()'>授权延期</button>
+
+                    <button class="btn btn-default m-b-xs btn-info pull-right" ng-click="searchAuthorization()" ><i class="fa fa-search"></i>查询</button>
+                    <select  class="form-control w-lg m-r-xs pull-right" ng-model="authorizationStatus" style="width: 110px;">
+                        <option value="">授权状态</option>
+                        <option value="01" >申请中</option>
+                        <option value="02">已拒绝</option>
+                        <option value="03">已授权</option>
+                        <option value="04">已失效</option>
+                        <option value="05">已完成</option>
+                        <option value="06">已取消</option>
+                        <option value="07">授权失效</option>
+                        <option value="08">委托公司取消</option>
+                    </select>
+                    <input ng-model="applicantName" class="form-control w-sm pull-right m-r-xs" placeholder="输入申请人姓名" style="width: 140px;"/>
+                    <input ng-model="vehiclePlate" class="form-control w-sm pull-right m-r-xs" placeholder="输入车牌号" style="width: 140px;"/>
+                    <input ng-model="vehicleIdentifyNum" class="form-control w-sm pull-right m-r-xs" placeholder="输入车架号" style="width: 140px;"/>
+                    <input ng-model="userId" class="form-control w-sm pull-right m-r-xs" placeholder="输入移动端用户名" style="width: 140px;"/>
+                    <input ng-model="applicantPhone" class="form-control w-sm pull-right m-r-xs" placeholder="输入申请人手机号" style="width: 140px;"/>
+                </div>
+            </div>
+        </div>
+        <div class="panel-body" style="padding-top: 0;">
+            <table border="1" class="table table-striped m-b-none" id="authorization_table">
+            </table>
+        </div>
+    </div>
+</div>
+<!-- 点击图片是显示图片 -->
+<div>
+    <div id="js-imgview-mask" style="position: fixed;height: 100%;width:100%;z-index:999998;left:0;top:0;background:#000; opacity: 0.5;filter:alpha(opacity=75);display: none;" onClick="$('#js-imgview')[0].style.display='none';$('#js-imgview-mask')[0].style.display='none';">
+    </div>
+    <div id="js-imgview" style="position:fixed;left: 50%; top: 50%;background: #000;z-index: 999999;width: 950px;height: 620px;margin-left: -460px;margin-top: -300px;padding:5px;display: none;text-align: center;">
+        <img id="bigimage" style="width:auto; height:auto; max-width:100%; max-height: 100%;"/>
+        <a style="position:absolute;width:40px;height:40px;right:-5px;top:-5px;" onClick="$('#js-imgview')[0].style.display='none';$('#js-imgview-mask')[0].style.display='none';">
+            <span style="display:inline-block;width:35px;height:35px;cursor:pointer;border-radius:50%!important;background:#393A3C;text-align:center;line-height:40px;"><i class="fa fa-close" style="font-size:25px;color:#fff;"></i></span>
+        </a>  
+    </div> 
+</div> 

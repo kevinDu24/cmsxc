@@ -1,0 +1,41 @@
+<div class="bg-light lter b-b wrapper-md">
+    <h1 class="m-n font-thin h4">收车公司管理</h1>
+</div>
+<div class="wrapper-md" ng-controller="recovery_user_list_controller">
+    <div>
+        <toaster-container toaster-options="{'position-class': 'toast-top-right', 'close-button':true}"></toaster-container>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-body wrapper-sm">
+            <div class="row">
+                <div class="col-lg-12">
+                    <form class="form-inline" role="form">
+                        <div class="form-group">
+                            <label class="sr-only" >公司简称 </label>
+                            <input class="form-control m-b-xs" ng-model="recoveryShortName" placeholder="公司简称">
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" >公司全称</label>
+                            <input class="form-control m-b-xs" ng-model="recoveryFullName" placeholder="公司全称">
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" >主管注册码</label>
+                            <input class="form-control m-b-xs" ng-model="managerRegisterCode" placeholder="主管注册码">
+                        </div>
+                        <div class="form-group">
+                            <label class="sr-only" >业务员注册码</label>
+                            <input class="form-control m-b-xs" ng-model="salesmanRegisterCode" placeholder="业务员注册码">
+                        </div>
+                        <button class="btn btn-default m-b-xs btn-info" ng-click="searchRecoveryUser()" ><i class="fa fa-search"></i>查询</button>
+                        <!--<div class="form-group pull-right">-->
+                            <!--<button class="btn btn-default m-b-xs btn-success" ng-click="saveRecoveryUser()"><i class="fa fa-plus"></i>添加用户</button>-->
+                            <!--<button class="btn btn-default m-b-xs btn-danger" ng-click="deleteRecoveryUser()"><i class="fa fa-trash-o"></i>删除用户</button>-->
+                        <!--</div>-->
+                    </form>
+                </div>
+            </div>
+        </div>
+        <table border="1" class="table table-striped m-b-none" id="recovery_company_table">
+        </table>
+    </div>
+</div>

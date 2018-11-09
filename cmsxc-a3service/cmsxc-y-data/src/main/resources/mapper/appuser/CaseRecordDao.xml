@@ -1,0 +1,581 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.com.leadu.cmsxc.data.appuser.dao.CaseRecordDao">
+    <!-- 组长/业务员 案件管理列表-->
+    <!-- 跟进中-包含小组派单中待收车，已过期，自己授权，他人授权以及悬赏列表中被授权的-->
+    <!-- 已完成-包含小组派单中自己完成，他人完成，已取消，以及悬赏列表中授权失效，已完成，委托方取消的-->
+    <select id="selectCaseRecordListBySalesMan" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.VehicleTaskVo" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.CaseRecordListVo">
+        select temp.plate,temp.vehicleType,temp.price_range,
+        temp.has_gps_flag, temp.volition_flag, temp.clue_flag,temp.taskId,temp.vehicle_identify_num,temp.operateDate, temp.status,
+        case when temp.status in ('01','02','03','08') then '1' else '2' end as taskStatus,temp.authorizationUserId,temp.groupId,temp.groupName
+        from (
+        select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,vehicletask.price_range,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,vehicletask.id as
+        taskId,vehicletask.vehicle_identify_num,'' as authorizationUserId, vehicletask.update_time as operateDate,
+        case when #{vehicleTaskVo.nowDate} > vehicletaskrecovery.failure_time and vehicletaskrecovery.status = '01' then '02'
+        when vehicletaskrecovery.status = '07' and auth_group_id = #{vehicleTaskVo.groupId} then '08'
+        when vehicletaskrecovery.status = '07' and auth_group_id <![CDATA[<>]]> #{vehicleTaskVo.groupId} then '03'
+        when vehicletaskrecovery.status = '04' and finish_group_id <![CDATA[<>]]> #{vehicleTaskVo.groupId} then '05'
+        else vehicletaskrecovery.status end as status,vehicletaskgroup.group_id as groupId,recoverygroup.group_name as groupName
+        from vehicle_task_group vehicletaskgroup
+        inner join vehicle_task_recovery vehicletaskrecovery on vehicletaskgroup.vehicle_task_recovery_id =
+        vehicletaskrecovery.id
+        inner join vehicle_task vehicletask on vehicletask.id = vehicletaskrecovery.task_id
+        left join recovery_group recoverygroup on recoverygroup.id = vehicletaskgroup.group_id
+        where vehicletaskgroup.group_id = #{vehicleTaskVo.groupId}
+        union
+        select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,vehicletask.price_range,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,vehicletask.id as
+        taskId,vehicletask.vehicle_identify_num,vehicleauthorization.user_id  as authorizationUserId,
+        case when vehicleauthorization.authorization_status = '07' then vehicleauthorization.authorization_out_time_date
+        else vehicleauthorization.operate_date end as operateDate,
+        case when vehicleauthorization.authorization_status = '05' then '04'
+        when vehicleauthorization.authorization_status = '08' then '06'
+        when vehicleauthorization.authorization_status = '03' then '08'
+        else vehicleauthorization.authorization_status end as status,recoverygroup.id as groupId,recoverygroup.group_name as groupName
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask on vehicletask.id = vehicleauthorization.task_id
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletaskrecovery.task_id = vehicletask.id
+        left join recovery_group_user recoverygroupuser on recoverygroupuser.group_user_id = vehicleauthorization.user_id
+        left join recovery_group recoverygroup on recoverygroup.id = recoverygroupuser.recovery_group_id
+        left join vehicle_task_group vehicletaskgroup on vehicletaskgroup.vehicle_task_recovery_id = vehicletaskrecovery.id
+        where (vehicletaskgroup.group_id != #{vehicleTaskVo.groupId}
+        or   vehicletaskgroup.group_id is null)
+        <if test=" vehicleTaskVo.status == 1">
+          and vehicleauthorization.authorization_status = '03'
+        </if>
+        <if test=" vehicleTaskVo.status == 2">
+          and  (vehicleauthorization.authorization_status = '07'
+          or vehicleauthorization.authorization_status = '05'
+          or vehicleauthorization.authorization_status = '08'  )
+        </if>
+        <if test="vehicleTaskVo.status != 1 and vehicleTaskVo.status != 2 and vehicleTaskVo.plate!=null and vehicleTaskVo.plate!=''">
+            and  (vehicleauthorization.authorization_status = '07'
+            or vehicleauthorization.authorization_status = '05'
+            or vehicleauthorization.authorization_status = '08'
+            or vehicleauthorization.authorization_status = '03')
+        </if>
+        and vehicleauthorization.user_id in
+        <foreach collection="vehicleTaskVo.users" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ) temp
+        where 1=1
+        <if test=" vehicleTaskVo.status == 1">
+            and (temp.status = '01'
+            or temp.status = '02'
+            or temp.status = '03'
+            or temp.status = '08')
+        </if>
+        <if test=" vehicleTaskVo.status == 2">
+            and (temp.status = '04'
+            or temp.status = '05'
+            or temp.status = '06'
+            or temp.status = '07')
+        </if>
+        <if test="vehicleTaskVo.plate!=null and vehicleTaskVo.plate!=''">
+            and temp.plate = #{vehicleTaskVo.plate}
+        </if>
+        <if test="vehicleTaskVo.clueFlag!=null and vehicleTaskVo.clueFlag!=''">
+            and temp.clue_flag = #{vehicleTaskVo.clueFlag}
+        </if>
+        <if test="vehicleTaskVo.hasGpsFlag!=null and vehicleTaskVo.hasGpsFlag!=''">
+            and temp.has_gps_flag = #{vehicleTaskVo.hasGpsFlag}
+        </if>
+        <if test="vehicleTaskVo.volitionFlag!=null and vehicleTaskVo.volitionFlag!=''">
+            and temp.volition_flag = #{vehicleTaskVo.volitionFlag}
+        </if>
+        <if test="vehicleTaskVo.list!=null and vehicleTaskVo.list.size!=0">
+            and (
+            <foreach collection="vehicleTaskVo.list" item="item" index="index">
+                <if test="index!=0">
+                    or temp.plate like #{item}
+                </if>
+                <if test="index==0">
+                    temp.plate like #{item}
+                </if>
+            </foreach>
+            )
+        </if>
+        order by temp.operateDate desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+    <!-- 获取数量-->
+    <select id="selectCaseRecordCountBySalesMan" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.VehicleTaskVo" resultType="java.lang.Integer">
+        select count(1)
+        from (
+        select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,vehicletask.price_range,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,vehicletask.id as
+        taskId,vehicletask.vehicle_identify_num, vehicletask.update_time as operateDate,
+        case when #{vehicleTaskVo.nowDate} > vehicletaskrecovery.failure_time and vehicletaskrecovery.status = '01' then '02'
+        when vehicletaskrecovery.status = '07' and auth_group_id = #{vehicleTaskVo.groupId} then '08'
+        when vehicletaskrecovery.status = '07' and auth_group_id <![CDATA[<>]]> #{vehicleTaskVo.groupId} then '03'
+        when vehicletaskrecovery.status = '04' and finish_group_id <![CDATA[<>]]> #{vehicleTaskVo.groupId} then '05'
+        else vehicletaskrecovery.status end as status
+        from vehicle_task_group vehicletaskgroup
+        inner join vehicle_task_recovery vehicletaskrecovery on vehicletaskgroup.vehicle_task_recovery_id =
+        vehicletaskrecovery.id
+        inner join vehicle_task vehicletask on vehicletask.id = vehicletaskrecovery.task_id
+        where vehicletaskgroup.group_id = #{vehicleTaskVo.groupId}
+        union
+        select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,vehicletask.price_range,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,vehicletask.id as
+        taskId,vehicletask.vehicle_identify_num,
+        case when vehicleauthorization.authorization_status = '07' then vehicleauthorization.authorization_out_time_date
+        else vehicleauthorization.operate_date end as operateDate,
+        case when vehicleauthorization.authorization_status = '05' then '04'
+        when vehicleauthorization.authorization_status = '08' then '06'
+        when vehicleauthorization.authorization_status = '03' then '08'
+        else vehicleauthorization.authorization_status end as status
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask on vehicletask.id = vehicleauthorization.task_id
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletaskrecovery.task_id = vehicletask.id
+        left join vehicle_task_group vehicletaskgroup on vehicletaskgroup.vehicle_task_recovery_id = vehicletaskrecovery.id
+        where (vehicletaskgroup.group_id != #{vehicleTaskVo.groupId}
+        or   vehicletaskgroup.group_id is null)
+        <if test=" vehicleTaskVo.status == 1">
+            and vehicleauthorization.authorization_status = '03'
+        </if>
+        <if test=" vehicleTaskVo.status == 2">
+            and  (vehicleauthorization.authorization_status = '07'
+            or vehicleauthorization.authorization_status = '05'
+            or vehicleauthorization.authorization_status = '08'  )
+        </if>
+        <if test="vehicleTaskVo.status != 1 and vehicleTaskVo.status != 2 and vehicleTaskVo.plate!=null and vehicleTaskVo.plate!=''">
+            and  (vehicleauthorization.authorization_status = '07'
+            or vehicleauthorization.authorization_status = '05'
+            or vehicleauthorization.authorization_status = '08'
+            or vehicleauthorization.authorization_status = '03')
+        </if>
+        and vehicleauthorization.user_id in
+        <foreach collection="vehicleTaskVo.users" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ) temp
+        where 1=1
+        <if test=" vehicleTaskVo.status == 1">
+            and (temp.status = '01'
+            or temp.status = '02'
+            or temp.status = '03'
+            or temp.status = '08')
+        </if>
+        <if test=" vehicleTaskVo.status == 2">
+            and (temp.status = '04'
+            or temp.status = '05'
+            or temp.status = '06'
+            or temp.status = '07')
+        </if>
+        <if test="vehicleTaskVo.plate!=null and vehicleTaskVo.plate!=''">
+            and temp.plate = #{vehicleTaskVo.plate}
+        </if>
+        <if test="vehicleTaskVo.clueFlag!=null and vehicleTaskVo.clueFlag!=''">
+            and temp.clue_flag = #{vehicleTaskVo.clueFlag}
+        </if>
+        <if test="vehicleTaskVo.hasGpsFlag!=null and vehicleTaskVo.hasGpsFlag!=''">
+            and temp.has_gps_flag = #{vehicleTaskVo.hasGpsFlag}
+        </if>
+        <if test="vehicleTaskVo.volitionFlag!=null and vehicleTaskVo.volitionFlag!=''">
+            and temp.volition_flag = #{vehicleTaskVo.volitionFlag}
+        </if>
+        <if test="vehicleTaskVo.list!=null and vehicleTaskVo.list.size!=0">
+            and (
+            <foreach collection="vehicleTaskVo.list" item="item" index="index">
+                <if test="index!=0">
+                    or temp.plate like #{item}
+                </if>
+                <if test="index==0">
+                    temp.plate like #{item}
+                </if>
+            </foreach>
+            )
+        </if>
+    </select>
+    <!-- 内勤人员 案件管理列表-->
+    <!-- 跟进中-包含收车公司派单中待收车，已过期，自己授权，他人授权以及悬赏列表中被授权的-->
+    <!-- 已完成-包含收车公司派单中自己完成，他人完成，已取消，以及悬赏列表中授权失效，已完成，委托方取消的-->
+    <select id="selectCaseRecordListByManager" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.VehicleTaskVo" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.CaseRecordListVo">
+        select temp.plate,temp.vehicleType,round(ifnull(temp.service_fee,0)) as serviceFee,temp.groupName,temp.groupId,
+        temp.has_gps_flag, temp.volition_flag, temp.clue_flag,temp.taskId,temp.vehicle_identify_num,temp.operateDate, temp.status,
+        case when temp.status in ('01','02','03','08') then '1' else '2' end as taskStatus,temp.authorizationUserId
+        from (
+        select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,
+        vehicletask.service_fee,recoverygroup.group_name as groupName,recoverygroup.id as groupId,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,vehicletask.id as
+        taskId,vehicletask.vehicle_identify_num, '' as authorizationUserId,vehicletask.update_time as operateDate,
+        case when #{vehicleTaskVo.nowDate} > vehicletaskrecovery.failure_time and vehicletaskrecovery.status = '01' then '02'
+        when vehicletaskrecovery.status = '07' then '08'
+        when vehicletaskrecovery.status = '04' and finish_group_id <![CDATA[<>]]> vehicletaskgroup.group_id then '05'
+        else vehicletaskrecovery.status end as status
+        from vehicle_task_recovery vehicletaskrecovery
+        left join vehicle_task_group vehicletaskgroup on vehicletaskgroup.vehicle_task_recovery_id = vehicletaskrecovery.id
+        left join recovery_group recoverygroup on recoverygroup.id = vehicletaskgroup.group_id
+        inner join vehicle_task vehicletask on vehicletask.id = vehicletaskrecovery.task_id
+        where vehicletaskrecovery.recovery_company_id = #{recoveryCompanyId}
+        union all
+        select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,
+        case when vehicletaskrecovery.recovery_company_id != #{recoveryCompanyId} or vehicletaskrecovery.recovery_company_id is null then -1
+        else vehicletask.service_fee end as serviceFee,recoverygroup.group_name as groupName,recoverygroup.id as groupId,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,vehicletask.id as
+        taskId,vehicletask.vehicle_identify_num,vehicleauthorization.user_id as authorizationUserId,
+        case when vehicleauthorization.authorization_status = '07' then vehicleauthorization.authorization_out_time_date
+        else vehicleauthorization.operate_date end as operateDate,
+        case when vehicleauthorization.authorization_status = '05' then '04'
+        when vehicleauthorization.authorization_status = '08' then '06'
+        when vehicleauthorization.authorization_status = '03' then '08'
+        else vehicleauthorization.authorization_status end as status
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask on vehicletask.id = vehicleauthorization.task_id
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletaskrecovery.task_id = vehicletask.id
+        left join recovery_group_user recoverygroupuser on recoverygroupuser.group_user_id = vehicleauthorization.user_id
+        left join recovery_group recoverygroup on recoverygroup.id = recoverygroupuser.recovery_group_id
+        left join vehicle_task_group vehicletaskgroup on vehicletaskgroup.vehicle_task_recovery_id = vehicletaskrecovery.id
+        where ((vehicletaskrecovery.recovery_company_id != #{recoveryCompanyId}
+        or   vehicletaskrecovery.recovery_company_id is null)
+        or(vehicletaskrecovery.recovery_company_id = #{recoveryCompanyId}
+        and (
+        vehicletaskrecovery.auth_group_id != vehicletaskgroup.group_id
+        or   vehicletaskrecovery.auth_group_id is null
+        or vehicletaskgroup.group_id is null
+        )))
+        <if test=" vehicleTaskVo.status == 1">
+            and vehicleauthorization.authorization_status = '03'
+        </if>
+        <if test=" vehicleTaskVo.status == 2">
+            and  (vehicleauthorization.authorization_status = '07'
+            or vehicleauthorization.authorization_status = '05'
+            or vehicleauthorization.authorization_status = '08'  )
+        </if>
+        <if test="vehicleTaskVo.status != 1 and vehicleTaskVo.status != 2 and vehicleTaskVo.plate!=null and vehicleTaskVo.plate!=''">
+            and  (vehicleauthorization.authorization_status = '07'
+            or vehicleauthorization.authorization_status = '05'
+            or vehicleauthorization.authorization_status = '08'
+            or vehicleauthorization.authorization_status = '03')
+        </if>
+        and vehicleauthorization.user_id in
+        <foreach collection="vehicleTaskVo.users" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ) temp
+        where 1=1
+        <if test=" vehicleTaskVo.status == 1">
+            and (temp.status = '01'
+            or temp.status = '02'
+            or temp.status = '03'
+            or temp.status = '08')
+        </if>
+        <if test=" vehicleTaskVo.status == 2">
+            and (temp.status = '04'
+            or temp.status = '05'
+            or temp.status = '06'
+            or temp.status = '07')
+        </if>
+        <if test="vehicleTaskVo.plate!=null and vehicleTaskVo.plate!=''">
+            and temp.plate = #{vehicleTaskVo.plate}
+        </if>
+        <if test="vehicleTaskVo.groupId!=null and vehicleTaskVo.groupId!='' and vehicleTaskVo.groupId!='000000'">
+            and temp.groupId = #{vehicleTaskVo.groupId}
+        </if>
+        <if test="vehicleTaskVo.groupId =='000000'">
+            and temp.groupId is null
+        </if>
+        <if test="vehicleTaskVo.clueFlag!=null and vehicleTaskVo.clueFlag!=''">
+            and temp.clue_flag = #{vehicleTaskVo.clueFlag}
+        </if>
+        <if test="vehicleTaskVo.hasGpsFlag!=null and vehicleTaskVo.hasGpsFlag!=''">
+            and temp.has_gps_flag = #{vehicleTaskVo.hasGpsFlag}
+        </if>
+        <if test="vehicleTaskVo.volitionFlag!=null and vehicleTaskVo.volitionFlag!=''">
+            and temp.volition_flag = #{vehicleTaskVo.volitionFlag}
+        </if>
+        <if test="vehicleTaskVo.list!=null and vehicleTaskVo.list.size!=0">
+            and (
+            <foreach collection="vehicleTaskVo.list" item="item" index="index">
+                <if test="index!=0">
+                    or temp.plate like #{item}
+                </if>
+                <if test="index==0">
+                    temp.plate like #{item}
+                </if>
+            </foreach>
+            )
+        </if>
+        order by temp.operateDate desc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+    <!-- 获取数量-->
+    <select id="selectCaseRecordCountByManager" parameterType="cn.com.leadu.cmsxc.pojo.appuser.vo.VehicleTaskVo" resultType="java.lang.Integer">
+        select count(*)
+        from (
+        select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,
+        vehicletask.service_fee,recoverygroup.group_name as groupName,recoverygroup.id as groupId,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,vehicletask.id as
+        taskId,vehicletask.vehicle_identify_num, '' as authorizationUserId,vehicletask.update_time as operateDate,
+        case when #{vehicleTaskVo.nowDate} > vehicletaskrecovery.failure_time and vehicletaskrecovery.status = '01' then '02'
+        when vehicletaskrecovery.status = '07' then '08'
+        when vehicletaskrecovery.status = '04' and finish_group_id <![CDATA[<>]]> vehicletaskgroup.group_id then '05'
+        else vehicletaskrecovery.status end as status
+        from vehicle_task_recovery vehicletaskrecovery
+        left join vehicle_task_group vehicletaskgroup on vehicletaskgroup.vehicle_task_recovery_id = vehicletaskrecovery.id
+        left join recovery_group recoverygroup on recoverygroup.id = vehicletaskgroup.group_id
+        inner join vehicle_task vehicletask on vehicletask.id = vehicletaskrecovery.task_id
+        where vehicletaskrecovery.recovery_company_id = #{recoveryCompanyId}
+        union all
+        select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,
+        case when vehicletaskrecovery.recovery_company_id != #{recoveryCompanyId} or vehicletaskrecovery.recovery_company_id is null then -1
+        else vehicletask.service_fee end as serviceFee,recoverygroup.group_name as groupName,recoverygroup.id as groupId,
+        vehicletask.has_gps_flag, vehicletask.volition_flag, vehicletask.clue_flag,vehicletask.id as
+        taskId,vehicletask.vehicle_identify_num,vehicleauthorization.user_id as authorizationUserId,
+        case when vehicleauthorization.authorization_status = '07' then vehicleauthorization.authorization_out_time_date
+        else vehicleauthorization.operate_date end as operateDate,
+        case when vehicleauthorization.authorization_status = '05' then '04'
+        when vehicleauthorization.authorization_status = '08' then '06'
+        when vehicleauthorization.authorization_status = '03' then '08'
+        else vehicleauthorization.authorization_status end as status
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask on vehicletask.id = vehicleauthorization.task_id
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletaskrecovery.task_id = vehicletask.id
+        left join recovery_group_user recoverygroupuser on recoverygroupuser.group_user_id = vehicleauthorization.user_id
+        left join recovery_group recoverygroup on recoverygroup.id = recoverygroupuser.recovery_group_id
+        left join vehicle_task_group vehicletaskgroup on vehicletaskgroup.vehicle_task_recovery_id = vehicletaskrecovery.id
+        where ((vehicletaskrecovery.recovery_company_id != #{recoveryCompanyId}
+        or   vehicletaskrecovery.recovery_company_id is null)
+        or(vehicletaskrecovery.recovery_company_id = #{recoveryCompanyId}
+        and (
+        vehicletaskrecovery.auth_group_id != vehicletaskgroup.group_id
+        or   vehicletaskrecovery.auth_group_id is null
+        or vehicletaskgroup.group_id is null
+        )))
+        <if test=" vehicleTaskVo.status == 1">
+            and vehicleauthorization.authorization_status = '03'
+        </if>
+        <if test=" vehicleTaskVo.status == 2">
+            and  (vehicleauthorization.authorization_status = '07'
+            or vehicleauthorization.authorization_status = '05'
+            or vehicleauthorization.authorization_status = '08'  )
+        </if>
+        <if test="vehicleTaskVo.status != 1 and vehicleTaskVo.status != 2 and vehicleTaskVo.plate!=null and vehicleTaskVo.plate!=''">
+            and  (vehicleauthorization.authorization_status = '07'
+            or vehicleauthorization.authorization_status = '05'
+            or vehicleauthorization.authorization_status = '08'
+            or vehicleauthorization.authorization_status = '03')
+        </if>
+        and vehicleauthorization.user_id in
+        <foreach collection="vehicleTaskVo.users" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ) temp
+        where 1=1
+        <if test=" vehicleTaskVo.status == 1">
+            and (temp.status = '01'
+            or temp.status = '02'
+            or temp.status = '03'
+            or temp.status = '08')
+        </if>
+        <if test=" vehicleTaskVo.status == 2">
+            and (temp.status = '04'
+            or temp.status = '05'
+            or temp.status = '06'
+            or temp.status = '07')
+        </if>
+        <if test="vehicleTaskVo.plate!=null and vehicleTaskVo.plate!=''">
+            and temp.plate = #{vehicleTaskVo.plate}
+        </if>
+        <if test="vehicleTaskVo.groupId!=null and vehicleTaskVo.groupId!='' and vehicleTaskVo.groupId!='000000'">
+            and temp.groupId = #{vehicleTaskVo.groupId}
+        </if>
+        <if test="vehicleTaskVo.groupId =='000000'">
+            and temp.groupId is null
+        </if>
+        <if test="vehicleTaskVo.clueFlag!=null and vehicleTaskVo.clueFlag!=''">
+            and temp.clue_flag = #{vehicleTaskVo.clueFlag}
+        </if>
+        <if test="vehicleTaskVo.hasGpsFlag!=null and vehicleTaskVo.hasGpsFlag!=''">
+            and temp.has_gps_flag = #{vehicleTaskVo.hasGpsFlag}
+        </if>
+        <if test="vehicleTaskVo.volitionFlag!=null and vehicleTaskVo.volitionFlag!=''">
+            and temp.volition_flag = #{vehicleTaskVo.volitionFlag}
+        </if>
+        <if test="vehicleTaskVo.list!=null and vehicleTaskVo.list.size!=0">
+            and (
+            <foreach collection="vehicleTaskVo.list" item="item" index="index">
+                <if test="index!=0">
+                    or temp.plate like #{item}
+                </if>
+                <if test="index==0">
+                    temp.plate like #{item}
+                </if>
+            </foreach>
+            )
+        </if>
+    </select>
+    <!-- 查看案件记录详情-->
+    <select id="selectCaseRecordDetail" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.CaseRecordVo">
+        select caserecord.case_title as caseTitle,caserecord.position,caserecord.detail_content,caserecord.photo_urls as photoUrl,caserecord.create_time as recordDate,
+        case when systemuser.user_name is not null then concat(caserecord.record_user_id,' (',systemuser.user_name, ') ')
+        else caserecord.record_user_id end as userId,caserecord.voice_urls, caserecord.video_urls,caserecord.voice_length,caserecord.sub_case_title,caserecord.result_flag
+        from case_record caserecord
+        left join system_user systemuser on systemuser.user_id = caserecord.record_user_id
+        where caserecord.task_id = #{taskId}
+        and caserecord.recovery_company_id = #{recoveryCompanyId}
+        order by caserecord.create_time desc
+    </select>
+
+    <!-- 寻车助手 - 案件管理列表 -->
+    <select id="selectCaseRecordListByLeaseAuditor" parameterType="cn.com.leadu.cmsxc.pojo.assistant.vo.CaseRecordListParamVo" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.CaseRecordListVo">
+        select temp.plate,temp.vehicleType,temp.service_fee,temp.has_gps_flag,temp.volition_flag,temp.clue_flag,
+        temp.taskId,temp.vehicle_identify_num,temp.recoveryCompanyId,temp.recoveryCompanyName,temp.update_time,temp.taskStatus
+        from
+        (select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,
+        vehicletask.service_fee,vehicletask.has_gps_flag, vehicletask.volition_flag,
+        vehicletask.clue_flag,vehicletask.id as taskId,vehicletask.vehicle_identify_num, recoverycompany.id as recoveryCompanyId,
+        recoverycompany.recovery_full_name as recoveryCompanyName,vehicletask.update_time,
+        case when vehicletask.task_status = '0' and (vehicletaskrecovery.assignment_flag = '0' or vehicletaskrecovery.assignment_flag is null ) then '01'
+        when vehicletask.task_status = '0' and vehicletaskrecovery.assignment_flag = '1' then '02'
+        when vehicletask.task_status = '1' then '03'
+        when vehicletask.task_status = '2' then '04'
+        end as taskStatus
+        from vehicle_task_recovery vehicletaskrecovery
+        inner join vehicle_task vehicletask on vehicletask.id = vehicletaskrecovery.task_id
+        left join recovery_company recoverycompany on recoverycompany.id = vehicletaskrecovery.recovery_company_id
+        and recoverycompany.id in (select recovery_company_id from recovery_lease_relation
+        where lease_id = #{vo.leaseId})
+        where vehicletask.lease_company_user_name = #{vo.leaseCompanyUserName}
+        <if test="vo.recoveryCompanyId!=null and vo.recoveryCompanyId!='' and vo.recoveryCompanyId!='000000'">
+            and recoverycompany.id = #{vo.recoveryCompanyId}
+        </if>
+        <if test="vo.recoveryCompanyId =='000000'">
+            and recoverycompany.id is null
+        </if>
+        <if test="vo.status == '0'.toString()">
+            and (vehicletaskrecovery.assignment_flag = #{vo.status}
+            or vehicletaskrecovery.assignment_flag is null)
+            and vehicletask.task_status = '0'
+        </if>
+        <if test="vo.status == '1'.toString()">
+            and (vehicletaskrecovery.assignment_flag = #{vo.status}
+            or vehicletask.task_status = '1'
+            or vehicletask.task_status = '2')
+        </if>
+        <if test="vo.status=='3'.toString()">
+        and vehicletaskrecovery.assignment_flag = #{vo.status}
+       </if>
+        <if test="vo.userRole=='12'.toString() and vo.provinces != null and vo.provinces.size!=0">
+            and (
+            <foreach collection="vo.provinces" item="item" index="index" >
+                <if test="index!=0">
+                    or vehicletask.fp_province =  #{item}
+                </if>
+                <if test="index==0">
+                    vehicletask.fp_province =  #{item}
+                </if>
+            </foreach>
+            )
+        </if>
+        union all
+        select vehicletask.plate, case when vehicletask.brand is not null then concat(vehicletask.brand,' ',vehicletask.vehicle_type)
+        else vehicletask.vehicle_type end as vehicleType,
+        vehicletask.service_fee,vehicletask.has_gps_flag, vehicletask.volition_flag,
+        vehicletask.clue_flag,vehicletask.id as
+        taskId,vehicletask.vehicle_identify_num, recoverycompany.id as recoveryCompanyId,
+        recoverycompany.recovery_full_name as recoveryCompanyName,vehicletask.update_time,
+        case when vehicleauthorization.authorization_status = '03' then '05'
+        when vehicleauthorization.authorization_status = '05' then '03'
+        when vehicleauthorization.authorization_status = '08' then '04'
+        end as taskStatus
+        from vehicle_authorization vehicleauthorization
+        inner join vehicle_task vehicletask on vehicletask.id = vehicleauthorization.task_id
+        left join vehicle_task_recovery vehicletaskrecovery on vehicletask.id = vehicletaskrecovery.task_id
+        inner join system_user authoruser on authoruser.user_id = vehicleauthorization.user_id
+        left join recovery_company recoverycompany on recoverycompany.id = authoruser.recovery_company_id
+        and recoverycompany.id in (select recovery_company_id from recovery_lease_relation where lease_id = #{vo.leaseId})
+        where (vehicletaskrecovery.recovery_company_id != authoruser.recovery_company_id
+        or vehicletaskrecovery.recovery_company_id is null)
+        and vehicletask.lease_company_user_name = #{vo.leaseCompanyUserName}
+        and (vehicleauthorization.authorization_status = '03'
+        or vehicleauthorization.authorization_status = '05'
+        or vehicleauthorization.authorization_status = '08')
+        <if test="vo.recoveryCompanyId!=null and vo.recoveryCompanyId!='' and vo.recoveryCompanyId!='000000'">
+            and authoruser.recovery_company_id = #{vo.recoveryCompanyId}
+            and recoverycompany.id is not null
+        </if>
+        <if test="vo.recoveryCompanyId =='000000'">
+            and recoverycompany.id is null
+        </if>
+        <if test="vo.status=='3'.toString()">
+            and vehicleauthorization.authorization_status = '03'
+        </if>
+        <if test="vo.status=='1'.toString()">
+            and (vehicleauthorization.authorization_status = '05'
+            or vehicleauthorization.authorization_status = '08')
+        </if>
+        <if test="vo.status=='0'.toString()">
+            and vehicleauthorization.authorization_status != '03'
+            and vehicleauthorization.authorization_status != '05'
+            and vehicleauthorization.authorization_status != '08'
+        </if>
+        <if test="vo.userRole=='12'.toString() and vo.provinces != null and vo.provinces.size!=0">
+            and (
+            <foreach collection="vo.provinces" item="item" index="index" >
+                <if test="index!=0">
+                    or vehicletask.fp_province =  #{item}
+                </if>
+                <if test="index==0">
+                    vehicletask.fp_province =  #{item}
+                </if>
+            </foreach>
+            )
+        </if>
+        )temp
+        where 1=1
+        <if test=" vo.status=='2'.toString()">
+            and temp.plate = #{vo.plate}
+        </if>
+        order by temp.taskStatus asc
+        <if test="page != 0 and size != 0">
+            limit ${(page-1)*size},${size}
+        </if>
+    </select>
+
+    <!-- 寻车助手-查看案件记录详情-->
+    <select id="selectCaseRecordDetailByTaskIdAndRecoveryCompanyId" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.assistant.vo.CaseRecordVo">
+        select caserecord.case_title as caseTitle,caserecord.position,caserecord.detail_content,caserecord.photo_urls as photoUrl,caserecord.create_time as recordDate,
+        case when systemuser.user_name is not null then concat(caserecord.record_user_id,' (',systemuser.user_name, ') ')
+        else caserecord.record_user_id end as userId,caserecord.voice_urls, caserecord.video_urls,caserecord.voice_length,caserecord.sub_case_title,caserecord.result_flag
+        from case_record caserecord
+        left join system_user systemuser on systemuser.user_id = caserecord.record_user_id
+        where caserecord.task_id = #{taskId}
+        and caserecord.recovery_company_id = #{recoveryCompanyId}
+        order by caserecord.create_time desc
+    </select>
+
+    <!-- 寻车助手-根据委托公司id获取合作的收车公司id-->
+    <select id="selectRecoveryCompanyId" parameterType="java.lang.String" resultType="java.lang.String">
+        select recovery_company_id from recovery_lease_relation
+        where lease_id = #{leaseId}
+    </select>
+
+    <!-- 根据工单id与收车公司id，获取板车使用起点地址-->
+    <select id="selectStartAddressInfo" parameterType="java.lang.String" resultType="cn.com.leadu.cmsxc.pojo.appuser.vo.StartLonLatVo">
+        select position as startAddress,lon as startLon, lat as startLat from case_record
+        where task_id = #{taskId}
+        and recovery_company_id = #{recoveryCompanyId}
+        and case_title = '04'
+    </select>
+
+
+</mapper>

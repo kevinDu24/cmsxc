@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: ${leadu-profiles-active:dev}
+  application:
+    name: cmsxc-c-agent
+
+management:
+  security:
+    enabled: false
